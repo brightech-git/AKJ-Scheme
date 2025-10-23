@@ -16,9 +16,34 @@ const styles = StyleSheet.create({
     height: SIZES.height,
   },
   backgroundImageStyle: {
-    resizeMode: 'contain',
+    resizeMode: 'cover',
   },
   
+
+  //Header-------------
+  header: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  zIndex: 1000, // keeps it above content
+  backgroundColor: COLORS.background, // or your preferred color
+  height: moderateScale(60),
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingHorizontal: SIZES.padding,
+  shadowColor: COLORS.shadow,
+  shadowOffset: {
+    width: 0,
+    height: moderateScale(2),
+  },
+  shadowOpacity: 0.15,
+  shadowRadius: moderateScale(4),
+  elevation: 4, // Android shadow
+  borderBottomWidth: StyleSheet.hairlineWidth,
+  borderBottomColor: COLORS.border, // subtle separator line
+},
+
   // ========== CONTENT WRAPPER ==========
   contentWrapper: {
     paddingHorizontal: scale(16),
@@ -44,7 +69,7 @@ const styles = StyleSheet.create({
   },
   contentText1: {
     ...FONTS.body1,
-    color: COLORS.textLight,
+    color: COLORS.goldtext,
     lineHeight: moderateScale(22),
     textAlign: 'justify',
   },
@@ -64,14 +89,14 @@ const styles = StyleSheet.create({
   },
   titletext: {
     ...FONTS.heading,
-    color: COLORS.primary1,
+    color: COLORS.white,
     // fontWeight: 'bold',
     letterSpacing: 0.5,
     fontSize: SIZES.h5,
   },
   viewAllText: {
     ...FONTS.heading,
-    color: COLORS.primary,
+    color: COLORS.text,
     // fontWeight: 'bold',
     letterSpacing: 0.5,
     fontSize: SIZES.h6-6,

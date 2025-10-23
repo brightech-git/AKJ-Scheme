@@ -9,74 +9,81 @@ const { COLORS, SIZES, FONTS } = appTheme;
 const TermsConditionsPage = () => {
   const termsData = [
     {
-      title: "1. Product Representation",
+      title: "Introduction",
       content: [
-        "Images are for reference only. Minor variations in color or finish may occur.",
-        "All products are handcrafted, so slight irregularities are natural.",
-        "For exact details, contact us before ordering."
+        "Welcome to AKJ Mini Gold Souk (“the Website”). These terms of use govern your access and use of the Website. By accessing or using the Website, you agree to be bound by these terms. If you do not agree with these terms, please refrain from using the Website."
       ]
     },
     {
-      title: "2. Pricing",
-      subtitle: "Currency & Taxes",
+      title: "Use of Content",
       content: [
-        "All prices are in INR and inclusive of GST"
+        "All content on the Website, including but not limited to text, images, graphics, logos, and videos, is the property of AKJ Mini Gold Souk and protected by applicable copyright and intellectual property laws. You may use the content solely for personal, non-commercial purposes. Any unauthorized use, reproduction, or distribution of the content is strictly prohibited."
+      ]
+    },
+    {
+      title: "Website Access",
+      content: [
+        "AKJ Mini Gold Souk grants you a limited, non-exclusive, and non-transferable right to access and use the Website for informational purposes only. We reserve the right to modify, suspend, or discontinue any aspect of the Website without prior notice."
+      ]
+    },
+    {
+      title: "User Conduct",
+      content: [
+        "You agree to use the Website in compliance with all applicable laws and regulations. You shall not engage in any activities that may interfere with or disrupt the functionality or security of the Website.",
+        "Additionally, you agree not to:"
       ],
       subsections: [
         {
-          title: "Price Changes",
+          title: "Prohibited Activities",
           content: [
-            "Prices may change without prior notice",
-            "Final amount charged will be as displayed at checkout."
+            "Post or transmit any unlawful, defamatory, obscene, or harmful content.",
+            "Use the Website to distribute spam, viruses, or any other malicious software.",
+            "Impersonate any person or entity, or falsely represent your affiliation with any entity.",
+            "Collect or store the personal information of other users without their consent."
           ]
         }
       ]
     },
     {
-      title: "3. Payments",
+      title: "Links to Third-Party Websites",
       content: [
-        "We accept:",
-        "• Online Payments",
-        "• UPI",
-        "• Debit/Credit Cards",
-        "• Net Banking",
-        "• Cash on Delivery (Selected PIN codes only)",
-        "• ₹50 COD fee may apply"
+        "The Website may contain links to third-party websites for your convenience. AKJ Mini Gold Souk does not endorse or assume any responsibility for the content or practices of these third-party websites. Your use of third-party websites is at your own risk and subject to their respective terms of use and privacy policies."
       ]
     },
     {
-      title: "4. Product Use & Care",
+      title: "Disclaimer of Warranties",
       content: [
-        "Handle gold-polished jewellery with care. Avoid water & chemicals.",
-        "Store in a dry pouch when not in use.",
-        "No guarantee for polish durability; depends on usage.",
-        "Ask us for maintenance tips to extend product life."
+        "The Website and its content are provided on an “as is” and “as available” basis, without any warranties or representations, express or implied. AKJ Mini Gold Souk disclaims all warranties, including but not limited to the accuracy, reliability, or fitness for a particular purpose of the content on the Website."
       ]
     },
     {
-      title: "5. Limitation of Liability",
+      title: "Limitation of Liability",
       content: [
-        "We are not liable for:",
-        "• Shipping delays or damage",
-        "• Force majeure events",
-        "• Improper use or care"
+        "AKJ Mini Gold Souk shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising out of your use or inability to use the Website or its content. This includes any damages resulting from errors, omissions, interruptions, or any loss of data."
       ]
     },
     {
-      title: "6. Intellectual Property",
+      title: "Indemnification",
       content: [
-        "All content is © and the property of our brand. No part may be:",
-        "• Copied or redistributed without permission",
-        "• Used commercially",
-        "• Altered or modified"
+        "You agree to indemnify and hold AKJ Mini Gold Souk and its officers, directors, employees, and agents harmless from any claims, liabilities, damages, expenses, and costs, including reasonable attorneys' fees, arising out of your use of the Website or any violation of these terms of use."
       ]
     },
     {
-      title: "7. Governing Law",
+      title: "Governing Law",
       content: [
-        "These terms are governed by Indian law.",
-        "Disputes will be settled in Madurai, Tamil Nadu.",
-        "Contact us before placing orders if you have any questions."
+        "These terms of use shall be governed by and construed in accordance with the laws of India. Any disputes arising from or relating to these terms or the Website shall be subject to the exclusive jurisdiction of the courts in India."
+      ]
+    },
+    {
+      title: "Modifications",
+      content: [
+        "AKJ Mini Gold Souk reserves the right to modify or update these terms of use at any time. It is your responsibility to review these terms periodically. Continued use of the Website after any modifications constitutes your acceptance of the updated terms."
+      ]
+    },
+    {
+      title: "Contact Information",
+      content: [
+        "If you have any questions or concerns regarding these terms of use, please contact us at care@akjminigoldsouk.com."
       ]
     }
   ];
@@ -84,7 +91,7 @@ const TermsConditionsPage = () => {
   return (
     <View style={styles.container}>
       <ImageBackground 
-        source={require('../../assets/bg6.jpg')}
+        source={require('../../assets/bg7.jpg')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -101,10 +108,6 @@ const TermsConditionsPage = () => {
             {termsData.map((section, index) => (
               <View key={index} style={styles.section}>
                 <TextDefault style={styles.sectionTitle}>{section.title}</TextDefault>
-                
-                {section.subtitle && (
-                  <TextDefault style={styles.subtitle}>{section.subtitle}</TextDefault>
-                )}
                 
                 {section.content.map((point, pointIndex) => (
                   <View key={pointIndex} style={styles.pointContainer}>
@@ -128,7 +131,7 @@ const TermsConditionsPage = () => {
             ))}
             
             <View style={styles.footer}>
-              <TextDefault style={styles.lastUpdated}>Last Updated: 23 August 2025</TextDefault>
+              <TextDefault style={styles.lastUpdated}>Last Updated: 01/06/2023</TextDefault>
             </View>
           </View>
         </ScrollView>
@@ -140,17 +143,12 @@ const TermsConditionsPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: COLORS.background,
   },
   backgroundImage: {
     flex: 1,
     width: '100%',
     height: '100%',
   },
-  // overlay: {
-  //   ...StyleSheet.absoluteFillObject,
-  //   backgroundColor: 'rgba(255, 249, 246, 0.92)',
-  // },
   scrollView: {
     flex: 1,
   },
@@ -176,12 +174,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...FONTS.h5,
-    color: COLORS.primary,
+    color: COLORS.text,
     marginBottom: SIZES.margin / 2,
+    fontWeight: '600',
   },
   subtitle: {
     ...FONTS.font,
-    color: COLORS.secondary,
+    color: COLORS.goldtext,
     marginBottom: SIZES.margin / 2,
   },
   subsection: {
@@ -190,8 +189,9 @@ const styles = StyleSheet.create({
   },
   subsectionTitle: {
     ...FONTS.font,
-    color: COLORS.text,
+    color: COLORS.goldtext,
     marginBottom: SIZES.margin / 4,
+    fontWeight: '600',
   },
   pointContainer: {
     flexDirection: 'row',
@@ -202,14 +202,14 @@ const styles = StyleSheet.create({
     width: SIZES.fontSm,
     height: SIZES.fontSm,
     borderRadius: SIZES.radius_sm,
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.goldtext,
     marginRight: SIZES.margin,
     marginTop: SIZES.fontSm,
   },
   pointText: {
     flex: 1,
     ...FONTS.font,
-    color: COLORS.text,
+    color: COLORS.goldtext,
     lineHeight: SIZES.font * 1.4,
   },
   footer: {
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   },
   lastUpdated: {
     ...FONTS.fontSm,
-    color: COLORS.textLight,
+    color: COLORS.goldtext,
     fontStyle: 'italic',
   },
 });

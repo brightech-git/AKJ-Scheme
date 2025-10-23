@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: moderateScale(20),
     paddingVertical: verticalScale(10),
+    
   },
 
   // Logo Section - Smaller and closer to top
@@ -31,6 +32,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: verticalScale(10),
     marginTop: verticalScale(-60),
+    borderWidth: 1,
+    borderColor: COLORS.black1,
+    borderRadius: moderateScale(50),
   },
   logoImage: {
     width: moderateScale(100),
@@ -65,21 +69,21 @@ const styles = StyleSheet.create({
     ...FONTS.heading,
     textAlign: 'center',
     marginBottom: verticalScale(4),
-    color: COLORS.primary,
+    color: COLORS.goldtext,
     fontSize: SIZES.h3,
   },
   subtitle: {
     ...FONTS.body,
     textAlign: 'center',
     marginBottom: verticalScale(16),
-    color: COLORS.title,
+    color: COLORS.goldtext1,
     fontSize: SIZES.h3,
   },
   label: {
-    ...FONTS.subheading,
+    ...FONTS.heading,
     fontWeight: '600',
     marginBottom: verticalScale(4),
-    color: COLORS.text,
+    color: COLORS.goldtext,
     marginTop: verticalScale(12), // Reduced margin
     fontSize: SIZES.h6,
   },
@@ -90,15 +94,17 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(16),
     // textDecorationLine: 'underline',
     fontWeight: '500',
-    fontSize: SIZES.font,
+    fontSize: SIZES.fontLg,
   },
   linkText1: {
     ...FONTS.subheading,
     textAlign: 'center',
-    color: COLORS.danger,
+    color: COLORS.linktext,
     marginTop: verticalScale(16),
     textDecorationLine: 'underline',
+    textDecorationColor: COLORS.linktext,
     fontWeight: '500',
+     fontSize: SIZES.fontLg,
   },
   errorText: {
     ...FONTS.fontXs,
@@ -117,7 +123,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderColor,
     fontSize: SIZES.font,
-    color: COLORS.black,
+    color: COLORS.white,
     ...FONTS.body1,
     shadowColor: COLORS.shadow,
     shadowOffset: {
@@ -127,7 +133,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: moderateScale(2),
     elevation: 1,
-    minHeight: verticalScale(40), // Fixed height for consistency
+    minHeight: verticalScale(38), // Fixed height for consistency
   },
 
   // Phone Input Container - Compact
@@ -156,7 +162,7 @@ const styles = StyleSheet.create({
   },
   countryCode: {
     ...FONTS.fontSm,
-    color: COLORS.black,
+    color: COLORS.white,
     marginRight: moderateScale(6),
     fontWeight: '600',
     paddingRight: moderateScale(6),
@@ -166,24 +172,28 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
     fontSize: SIZES.font,
-    color: COLORS.black,
+    color: COLORS.white,
     ...FONTS.body1,
     paddingLeft: moderateScale(6),
   },
 
   // Buttons - Compact
   primaryButton: {
-    borderRadius: SIZES.radius_sm,
-    marginTop: verticalScale(20), // Reduced margin
-    overflow: 'hidden',
+   borderRadius: moderateScale(15),
+    marginTop: verticalScale(24),
+    overflow: Platform.OS === "ios" ? "visible" : "hidden", // avoids cutting shadow on iOS
     shadowColor: COLORS.shadow,
     shadowOffset: {
       width: 0,
-      height: moderateScale(3),
+      height: moderateScale(4),
     },
     shadowOpacity: 0.25,
     shadowRadius: moderateScale(6),
-    elevation: 5,
+    elevation: 6, // Android shadow
+    height: moderateScale(48),
+    width: "85%",
+    alignSelf: "center",
+    backgroundColor: COLORS.primary, // fallback if gradient not rendered
   },
   buttonGradient: {
     paddingVertical: verticalScale(10), // Reduced padding
@@ -194,7 +204,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     ...FONTS.h5,
     fontWeight: '600',
-    color: COLORS.white,
+    color: COLORS.black,
     fontSize: SIZES.h5,
   },
   disabledButton: {

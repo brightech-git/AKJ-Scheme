@@ -10,14 +10,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
-  StyleSheet,
-  ImageBackground
+  StyleSheet
 } from "react-native";
 import appTheme from "../../utils/Theme";
 import { BackHeader } from "../../components";
 import CustomPicker from "./CustomPicker";
 import CommonHeader from "../../components/CommonHeader/CommonHeader";
-import { API_BASE_URL_OLD } from "../../Config/API";
 
 const { COLORS, SIZES, FONTS } = appTheme;
 
@@ -29,7 +27,6 @@ const SchemeDetailsPage = ({
   setValidationErrors,
   isSubmitting,
   API_BASE_URL,
-  schemes, // Receive schemes from parent
 }) => {
   const scrollViewRef = useRef(null);
   const inputRefs = useRef({});
@@ -47,6 +44,7 @@ const SchemeDetailsPage = ({
     ...schemeData,
   });
 
+  const [schemes, setSchemes] = useState([]);
   const [amounts, setAmounts] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -83,9 +81,28 @@ const SchemeDetailsPage = ({
   }, [activeInput]);
 
   useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/v1/api/member/scheme`);
+        const data = await response.json();
+        const formattedSchemes = data.map((s) => ({
+          id: s.SchemeId,
+          name: s.schemeName,
+          description: s.SchemeSName,
+        }));
+        setSchemes(formattedSchemes);
+      } catch (error) {
+        console.error("Error fetching schemes:", error);
+      }
+    };
+
+    fetchSchemes();
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
     const fetchTransactionTypes = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL_OLD}/account/getTranType`);
+        const response = await fetch(`${API_BASE_URL}/v1/api/account/getTranType`);
         if (!response.ok) throw new Error("Network response was not ok.");
         const data = await response.json();
         setTransactionTypes(data);
@@ -94,24 +111,22 @@ const SchemeDetailsPage = ({
       }
     };
     fetchTransactionTypes();
-  }, [API_BASE_URL_OLD]);
+  }, [API_BASE_URL]);
 
-  // Set default scheme if none selected
   useEffect(() => {
-    if (schemes && schemes.length > 0 && formData.selectedSchemeId === null) {
-      setFormData(prev => ({ ...prev, selectedSchemeId: schemes[0].SchemeId }));
+    if (schemes.length > 0 && formData.selectedSchemeId === null) {
+      setFormData(prev => ({ ...prev, selectedSchemeId: schemes[0].id }));
     }
   }, [schemes, formData.selectedSchemeId]);
 
-  // Fetch amounts when scheme changes (for BMG AMOUNT SCHEME)
+  // Fetch amounts when scheme changes
   useEffect(() => {
     const fetchAmounts = async () => {
-      // Only fetch amounts for BMG AMOUNT SCHEME (SchemeId: 1)
-      if (formData.selectedSchemeId === 1) {
+      if (formData.selectedSchemeId && formData.selectedSchemeId !== 7) {
         setLoading(true);
         try {
           const response = await fetch(
-            `${API_BASE_URL_OLD}/member/schemeid?schemeId=${formData.selectedSchemeId}`
+            `${API_BASE_URL}/v1/api/member/schemeid?schemeId=${formData.selectedSchemeId}`
           );
           
           if (!response.ok) {
@@ -145,17 +160,16 @@ const SchemeDetailsPage = ({
     };
 
     fetchAmounts();
-  }, [formData.selectedSchemeId, API_BASE_URL_OLD]);
+  }, [formData.selectedSchemeId, API_BASE_URL]);
 
-  // Fetch silver rate for BMG DIGI SILVER
-  const fetchSilverRate = async () => {
+  const fetchGoldRate = async () => {
     setLoadingGoldRate(true);
     setGoldRateError(false);
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      const response = await fetch(`${API_BASE_URL_OLD}/account/todayrate`, {
+      const response = await fetch(`${API_BASE_URL}/v1/api/account/todayrate`, {
         signal: controller.signal,
         headers: {
           Accept: "application/json",
@@ -165,30 +179,27 @@ const SchemeDetailsPage = ({
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to fetch silver rate`);
+        throw new Error(`HTTP ${response.status}: Failed to fetch gold rate`);
       }
 
       const data = await response.json();
 
-      // Use silver rate if available, otherwise fallback to gold rate
-      const rate = data.SILVERRATE || data.GOLDRATE;
-      
-      if (!rate || isNaN(rate)) {
-        throw new Error("Invalid silver rate received from server");
+      if (!data.Rate || isNaN(data.Rate)) {
+        throw new Error("Invalid gold rate received from server");
       }
 
-      setGoldRate(rate);
+      setGoldRate(data.Rate);
     } catch (error) {
-      console.error("Error fetching silver rate:", error);
+      console.error("Error fetching gold rate:", error);
       setGoldRateError(true);
       setGoldRate(null);
 
       if (error.name !== "AbortError") {
         Alert.alert(
           "Error",
-          "Failed to fetch current silver rate. Please check your internet connection and try again.",
+          "Failed to fetch current gold rate. Please check your internet connection and try again.",
           [
-            { text: "Retry", onPress: fetchSilverRate },
+            { text: "Retry", onPress: fetchGoldRate },
             { text: "Cancel", style: "cancel" },
           ]
         );
@@ -199,9 +210,13 @@ const SchemeDetailsPage = ({
   };
 
   useEffect(() => {
-    // Fetch silver rate for BMG DIGI SILVER (SchemeId: 2)
-    if (formData.selectedSchemeId === 2 && goldRate === null && !loadingGoldRate && !goldRateError) {
-      fetchSilverRate();
+    if (
+      formData.selectedSchemeId === 7 &&
+      goldRate === null &&
+      !loadingGoldRate &&
+      !goldRateError
+    ) {
+      fetchGoldRate();
     }
   }, [formData.selectedSchemeId, goldRate, loadingGoldRate, goldRateError]);
 
@@ -230,7 +245,7 @@ const SchemeDetailsPage = ({
     }
   };
 
-  const handleDigiSilverAmountChange = (text) => {
+  const handleDigiGoldAmountChange = (text) => {
     const sanitizedText = text.replace(/[^0-9.]/g, "");
 
     const parts = sanitizedText.split(".");
@@ -244,36 +259,25 @@ const SchemeDetailsPage = ({
 
   const validateStep = () => {
     const errors = {};
-    
-    if (!formData.selectedSchemeId) {
-      errors.scheme = "Please select a scheme";
-    }
+    if (!formData.selectedSchemeId) errors.scheme = "Please select a scheme";
 
-    // BMG DIGI SILVER validation
-    if (formData.selectedSchemeId === 2) {
+    if (formData.selectedSchemeId === 7) {
       if (!formData.amount || isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
         errors.amount = "Please enter a valid amount greater than 0";
       } else if (parseFloat(formData.amount) < 1) {
         errors.amount = "Minimum payment amount is ₹1";
       }
       if (!goldRate) {
-        errors.goldRate = "Current silver rate is not available. Please retry fetching.";
+        errors.goldRate = "Current gold rate is not available. Please retry fetching.";
       }
       if (!formData.calculatedWeight || parseFloat(formData.calculatedWeight) <= 0) {
-        errors.calculatedWeight = "Calculated silver weight is invalid.";
+        errors.calculatedWeight = "Calculated gold weight is invalid.";
       }
-    } 
-    // BMG AMOUNT SCHEME validation
-    else if (formData.selectedSchemeId === 1) {
-      if (!formData.amount) {
-        errors.amount = "Please select an amount";
-      }
+    } else {
+      if (!formData.amount) errors.amount = "Please select an amount";
     }
 
-    if (!formData.accCode) {
-      errors.accCode = "Please select a payment mode";
-    }
-    
+    if (!formData.accCode) errors.accCode = "Please select a payment mode";
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -289,11 +293,9 @@ const SchemeDetailsPage = ({
     }
   };
 
-  const isDigiSilver = formData.selectedSchemeId === 2;
-  const isAmountScheme = formData.selectedSchemeId === 1;
-  
-  const selectedScheme = schemes?.find((s) => s.SchemeId === formData.selectedSchemeId);
-  const schemeName = selectedScheme ? selectedScheme.schemeName : 'No Scheme Selected';
+  const isDigiGold = formData.selectedSchemeId === 7;
+  const selectedScheme = schemes.find((s) => s.id === formData.selectedSchemeId);
+  const schemeName = selectedScheme ? selectedScheme.name : 'No Scheme Selected';
 
   return (
     <KeyboardAvoidingView
@@ -301,255 +303,227 @@ const SchemeDetailsPage = ({
       keyboardVerticalOffset={Platform.select({ ios: 60, android: 80 })}
       style={styles.container}
     >
-      <ImageBackground 
-        source={require("../../assets/bg6.jpg")} 
-        style={styles.backgroundImage}
-        resizeMode="cover"
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: keyboardHeight - 250 }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          ref={scrollViewRef}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: keyboardHeight + 50 }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <CommonHeader title={"Scheme Details"} />
-          <View style={[styles.card]}>
+        <View style={[styles.card, { backgroundColor: COLORS.card }]}>
 
-            {/* Scheme Selection */}
-            <View style={styles.inputContainer}>
-              <Text style={[styles.label, FONTS.h6]}>
-                Scheme Selection <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
-              </Text>
-              <CustomPicker
-                selectedValue={formData.selectedSchemeId}
-                onValueChange={(itemValue) => {
-                  updateFormData('selectedSchemeId', itemValue);
-                  // Reset amount when scheme changes
-                  updateFormData('amount', '');
-                  updateFormData('calculatedWeight', '');
-                }}
-                items={[
-                  { label: 'Select a Scheme', value: null },
-                  ...(schemes?.map((scheme) => ({
-                    label: scheme.schemeName,
-                    value: scheme.SchemeId
-                  })) || [])
-                ]}
-                placeholder="Select Scheme"
-                enabled={!isSubmitting}
-              />
-              {validationErrors.scheme && (
-                <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.scheme}</Text>
-              )}
+          <CommonHeader title="Scheme Details" />
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, FONTS.h6]}>
+              Scheme Selection <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
+            </Text>
+            <View style={[styles.schemeDisplay, { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }]}>
+              <Text style={[styles.schemeText, FONTS.font]}>{schemeName}</Text>
             </View>
+            {validationErrors.scheme && (
+              <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.scheme}</Text>
+            )}
+          </View>
 
-            {/* BMG DIGI SILVER - Manual Amount Input */}
-            {isDigiSilver && (
-              <>
-                <View style={styles.inputContainer}>
-                  <Text style={[styles.label, FONTS.h6]}>
-                    Amount (₹) <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
-                  </Text>
-                  <TextInput
+          {isDigiGold ? (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={[styles.label, FONTS.h6]}>
+                  Amount (₹) <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    validationErrors.amount && styles.inputError,
+                    { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
+                  ]}
+                  keyboardType="decimal-pad"
+                  value={formData.amount}
+                  editable={!isSubmitting}
+                  onChangeText={handleDigiGoldAmountChange}
+                  placeholder="Enter amount for DigiGold"
+                  placeholderTextColor={COLORS.placeholder}
+                  maxLength={10}
+                  onFocus={() => setActiveInput('amount')}
+                  ref={(ref) => (inputRefs.current['amount'] = ref)}
+                />
+                {validationErrors.amount && (
+                  <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.amount}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={[styles.label, FONTS.h6]}>Current Gold Rate</Text>
+                {loadingGoldRate ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SIZES.margin }} />
+                ) : goldRateError ? (
+                  <TouchableOpacity
                     style={[
-                      styles.input,
-                      validationErrors.amount && styles.inputError,
+                      styles.retryButton,
+                      { backgroundColor: COLORS.primaryLight, borderColor: COLORS.danger }
+                    ]}
+                    onPress={fetchGoldRate}
+                    disabled={isSubmitting}
+                  >
+                    <Text style={[styles.retryText, FONTS.fontSm, { color: COLORS.danger }]}>
+                      Failed to load rate. Tap to retry
+                    </Text>
+                  </TouchableOpacity>
+                ) : goldRate ? (
+                  <Text
+                    style={[
+                      styles.staticValueText,
+                      FONTS.font,
                       { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
                     ]}
-                    keyboardType="decimal-pad"
-                    value={formData.amount}
-                    editable={!isSubmitting}
-                    onChangeText={handleDigiSilverAmountChange}
-                    placeholder="Enter amount for Digi Silver"
-                    placeholderTextColor={COLORS.placeholder}
-                    maxLength={10}
-                    onFocus={() => setActiveInput('amount')}
-                    ref={(ref) => (inputRefs.current['amount'] = ref)}
-                  />
-                  {validationErrors.amount && (
-                    <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.amount}</Text>
-                  )}
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={[styles.label, FONTS.h6]}>Current Silver Rate</Text>
-                  {loadingGoldRate ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SIZES.margin }} />
-                  ) : goldRateError ? (
-                    <TouchableOpacity
-                      style={[
-                        styles.retryButton,
-                        { backgroundColor: COLORS.primaryLight, borderColor: COLORS.danger }
-                      ]}
-                      onPress={fetchSilverRate}
-                      disabled={isSubmitting}
-                    >
-                      <Text style={[styles.retryText, FONTS.fontSm, { color: COLORS.danger }]}>
-                        Failed to load rate. Tap to retry
-                      </Text>
-                    </TouchableOpacity>
-                  ) : goldRate ? (
-                    <View
-                      style={[
-                        styles.staticValueContainer,
-                        { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
-                      ]}
-                    >
-                      <Text style={[styles.staticValueText, FONTS.font]}>
-                        {`₹${goldRate} / gm`}
-                      </Text>
-                    </View>
-                  ) : (
-                    <View
-                      style={[
-                        styles.staticValueContainer,
-                        { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
-                      ]}
-                    >
-                      <Text style={[styles.staticValueText, FONTS.font]}>N/A</Text>
-                    </View>
-                  )}
-                  {validationErrors.goldRate && (
-                    <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.goldRate}</Text>
-                  )}
-                </View>
-
-                <View style={styles.inputContainer}>
-                  <Text style={[styles.label, FONTS.h6]}>Calculated Silver Weight (grams)</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      styles.disabledInput,
-                      validationErrors.calculatedWeight && styles.inputError,
-                      { backgroundColor: COLORS.darkInput, borderColor: COLORS.borderColor }
-                    ]}
-                    value={formData.calculatedWeight ? `${formData.calculatedWeight} g` : ''}
-                    editable={false}
-                    placeholder="Weight will be calculated"
-                    placeholderTextColor={COLORS.placeholder}
-                  />
-                  {validationErrors.calculatedWeight && (
-                    <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.calculatedWeight}</Text>
-                  )}
-                  {formData.amount && formData.calculatedWeight && parseFloat(formData.calculatedWeight) > 0 && (
-                    <Text style={[styles.hintText, FONTS.fontXs]}>
-                      You will purchase {formData.calculatedWeight}g of silver.
-                    </Text>
-                  )}
-                </View>
-              </>
-            )}
-
-            {/* BMG AMOUNT SCHEME - Predefined Amounts */}
-            {isAmountScheme && (
-              <>
-                <View style={styles.inputContainer}>
-                  <Text style={[styles.label, FONTS.h6]}>
-                    Amount <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
+                  >
+                    {`₹${goldRate} / gm (22K)`}
                   </Text>
-                  {loading ? (
-                    <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SIZES.margin }} />
-                  ) : amounts.length > 0 ? (
-                    <CustomPicker
-                      selectedValue={formData.amount}
-                      onValueChange={(itemValue) => {
-                        const selectedAmount = amounts.find((amt) => amt.value === itemValue);
-                        updateFormData('amount', itemValue);
-                        if (selectedAmount) {
-                          updateFormData('selectedGroupCodeObj', selectedAmount.groupCode);
-                          updateFormData('selectedCurrentRegNoObj', selectedAmount.currentRegNo);
-                        }
-                      }}
-                      items={[
-                        { label: 'Select an Amount', value: '' },
-                        ...amounts.map((amt) => ({
-                          label: `₹${amt.value} (${amt.groupCode})`,
-                          value: amt.value
-                        }))
-                      ]}
-                      placeholder="Select Amount"
-                      enabled={!isSubmitting}
-                    />
-                  ) : (
-                    <Text style={[styles.noDataText, FONTS.fontXs]}>
-                      No amounts available for this scheme.
-                    </Text>
-                  )}
-                  {validationErrors.amount && (
-                    <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.amount}</Text>
-                  )}
-                </View>
-              </>
-            )}
-
-            {/* Payment Mode (Common for both schemes) */}
-            <View style={styles.inputContainer}>
-              <Text style={[styles.label, FONTS.h6]}>
-                Payment Mode <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
-              </Text>
-              <CustomPicker
-                selectedValue={formData.accCode}
-                onValueChange={(itemValue) => {
-                  updateFormData('accCode', itemValue);
-                  const selectedType = transactionTypes.find((type) => type.ACCOUNT === itemValue);
-                  if (selectedType?.CARDTYPE) {
-                    updateFormData('modePay', selectedType.CARDTYPE);
-                  }
-                }}
-                items={[
-                  { label: 'Select Payment Mode', value: '' },
-                  ...transactionTypes.map((type) => ({ label: type.NAME, value: type.ACCOUNT }))
-                ]}
-                placeholder="Select Payment Mode"
-                enabled={!isSubmitting}
-              />
-              {validationErrors.accCode && (
-                <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.accCode}</Text>
-              )}
-            </View>
-
-            {/* Buttons */}
-            <View style={[styles.buttonRow, { gap: SIZES.margin }]}>
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.submitButton,
-                  isSubmitting && styles.buttonDisabled,
-                  { backgroundColor: COLORS.primary }
-                ]}
-                onPress={handleSubmit}
-                disabled={isSubmitting}
-                activeOpacity={0.7}
-              >
-                {isSubmitting ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator color={COLORS.white} />
-                    <Text style={[styles.buttonText, styles.loadingText, FONTS.h6, { color: COLORS.white }]}>
-                      Submitting...
-                    </Text>
-                  </View>
                 ) : (
-                  <Text style={[styles.buttonText, FONTS.h6, { color: COLORS.white }]}>Submit</Text>
+                  <Text
+                    style={[
+                      styles.staticValueText,
+                      FONTS.font,
+                      { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
+                    ]}
+                  >
+                    N/A
+                  </Text>
                 )}
-              </TouchableOpacity>
+                {validationErrors.goldRate && (
+                  <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.goldRate}</Text>
+                )}
+              </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.backButton,
-                  isSubmitting && styles.buttonDisabled,
-                  { backgroundColor: COLORS.secondary, borderColor: COLORS.outline }
-                ]}
-                onPress={onBack}
-                disabled={isSubmitting}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.buttonText, FONTS.h6, { color: COLORS.white }]}>Back</Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.inputContainer}>
+                <Text style={[styles.label, FONTS.h6]}>Calculated Gold Weight (grams)</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    styles.disabledInput,
+                    validationErrors.calculatedWeight && styles.inputError,
+                    { backgroundColor: COLORS.input, borderColor: COLORS.borderColor }
+                  ]}
+                  value={formData.calculatedWeight ? `${formData.calculatedWeight} g` : ''}
+                  editable={false}
+                  placeholder="Weight will be calculated"
+                  placeholderTextColor={COLORS.placeholder}
+                />
+                {validationErrors.calculatedWeight && (
+                  <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.calculatedWeight}</Text>
+                )}
+                {formData.amount && formData.calculatedWeight && parseFloat(formData.calculatedWeight) > 0 && (
+                  <Text style={[styles.hintText, FONTS.fontXs]}>
+                    You will purchase {formData.calculatedWeight}g of 22K gold.
+                  </Text>
+                )}
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={[styles.label, FONTS.h6]}>
+                  Amount <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
+                </Text>
+                {loading ? (
+                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: SIZES.margin }} />
+                ) : amounts.length > 0 ? (
+                  <CustomPicker
+                    selectedValue={formData.amount}
+                    onValueChange={(itemValue) => {
+                      const selectedAmount = amounts.find((amt) => amt.value === itemValue);
+                      updateFormData('amount', itemValue);
+                      if (selectedAmount) {
+                        updateFormData('selectedGroupCodeObj', selectedAmount.groupCode);
+                        updateFormData('selectedCurrentRegNoObj', selectedAmount.currentRegNo);
+                      }
+                    }}
+                    items={[
+                      { label: 'Select an Amount', value: '' },
+                      ...amounts.map((amt) => ({
+                        label: `₹${amt.value} (${amt.groupCode})`,
+                        value: amt.value
+                      }))
+                    ]}
+                    placeholder="Select Amount"
+                    enabled={!isSubmitting}
+                  />
+                ) : (
+                  <Text style={[styles.noDataText, FONTS.fontXs]}>
+                    No amounts available for this scheme.
+                  </Text>
+                )}
+                {validationErrors.amount && (
+                  <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.amount}</Text>
+                )}
+              </View>
+            </>
+          )}
+
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, FONTS.h6]}>
+              Payment Mode <Text style={[styles.asterisk, { color: COLORS.danger }]}>*</Text>
+            </Text>
+            <CustomPicker
+              selectedValue={formData.accCode}
+              onValueChange={(itemValue) => {
+                updateFormData('accCode', itemValue);
+                const selectedType = transactionTypes.find((type) => type.ACCOUNT === itemValue);
+                if (selectedType?.CARDTYPE) {
+                  updateFormData('modePay', selectedType.CARDTYPE);
+                }
+              }}
+              items={[
+                { label: 'Select Payment Mode', value: '' },
+                ...transactionTypes.map((type) => ({ label: type.NAME, value: type.ACCOUNT }))
+              ]}
+              placeholder="Select Payment Mode"
+              enabled={!isSubmitting}
+            />
+            {validationErrors.accCode && (
+              <Text style={[styles.errorText, FONTS.fontSm]}>{validationErrors.accCode}</Text>
+            )}
           </View>
-        </ScrollView>
-      </ImageBackground>
+
+          <View style={[styles.buttonRow, { gap: SIZES.margin }]}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                isSubmitting && styles.buttonDisabled,
+                { backgroundColor: COLORS.primary }
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+              activeOpacity={0.7}
+            >
+              {isSubmitting ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color={COLORS.white} />
+                  <Text style={[styles.buttonText, styles.loadingText, FONTS.h6, { color: COLORS.white }]}>
+                    Submitting...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={[styles.buttonText, FONTS.h6, { color: COLORS.white }]}>Submit</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.backButton,
+                isSubmitting && styles.buttonDisabled,
+                { backgroundColor: COLORS.secondary, borderColor: COLORS.outline }
+              ]}
+              onPress={onBack}
+              disabled={isSubmitting}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.buttonText, FONTS.h6, { color: COLORS.white }]}>Back</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -557,18 +531,14 @@ const SchemeDetailsPage = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backgroundImage: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
     padding: SIZES.padding,
   },
   card: {
-    backgroundColor: COLORS.card1,
+    backgroundColor: COLORS.card,
     borderRadius: SIZES.radius_lg,
     padding: SIZES.padding,
     marginBottom: SIZES.margin,
@@ -578,7 +548,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
   },
-
+  header: {
+    backgroundColor: COLORS.surface,
+    paddingVertical: SIZES.padding,
+    paddingHorizontal: SIZES.padding,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.margin,
+    borderWidth: 1,
+    borderColor: COLORS.borderColor,
+  },
   inputContainer: {
     marginBottom: SIZES.margin * 1,
   },
@@ -594,7 +572,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
     paddingHorizontal: SIZES.padding,
     ...FONTS.h6,
-    color: COLORS.title,
+    color: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.borderColor,
   },
@@ -607,25 +585,38 @@ const styles = StyleSheet.create({
     fontSize: SIZES.fontLg,
     fontWeight: '700',
   },
-  disabledInput: {
-    backgroundColor: COLORS.darkInput,
-    color: COLORS.textLight,
-    opacity: 0.7,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderColor,
-  },
-  staticValueContainer: {
+  schemeDisplay: {
     height: 56,
     backgroundColor: COLORS.input,
     borderRadius: SIZES.radius,
+    justifyContent: 'center',
+    paddingHorizontal: SIZES.padding,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderColor,
+  },
+  schemeText: {
+    ...FONTS.font,
+    color: COLORS.text,
+  },
+  disabledInput: {
+    backgroundColor: COLORS.darkInput,
+    color: COLORS.white,
+    opacity: 0.8,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderColor,
+  },
+  staticValueText: {
+    height: 56,
+    backgroundColor: COLORS.input,
+    borderRadius: SIZES.radius,
+    paddingHorizontal: SIZES.padding,
+    ...FONTS.font,
+    color: COLORS.text,
     borderWidth: 1.5,
     borderColor: COLORS.borderColor,
     justifyContent: 'center',
-    paddingHorizontal: SIZES.padding,
-  },
-  staticValueText: {
-    ...FONTS.font,
-    color: COLORS.text,
+    alignItems: 'flex-start',
+    paddingTop: 18,
   },
   retryButton: {
     paddingVertical: 10,
@@ -668,6 +659,8 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SIZES.padding,
     borderRadius: SIZES.radius,
     alignItems: 'center',
     justifyContent: 'center',
@@ -676,10 +669,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    height: 46,
-  },
-  submitButton: {
-    backgroundColor: COLORS.primary,
   },
   backButton: {
     backgroundColor: COLORS.secondary,

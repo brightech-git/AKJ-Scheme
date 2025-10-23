@@ -24,7 +24,8 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 
 const PaymentDetailScreen = ({ navigation, route }) => {
-  const { payment, accountDetails, schemeName, productdata } = route.params;
+  const { payment, accountDetails, schemeName, productdata, schemeinfo } =
+    route.params;
 
   if (!payment) {
     navigation.goBack();
@@ -72,7 +73,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
   const totalSchemeAmount =
     schemeDetails.schemaSummaryTransBalance?.amtrecd ||
     paymentHistory.reduce((total, p) => total + parseFloat(p.amount || 0), 0);
-  const amountReceived = accountDetails.amount;
+  const amountReceived = payment.amount;
   const insPaid =
     schemeDetails.schemaSummaryTransBalance?.insPaid || paymentHistory.length;
   const totalIns = schemeDetails.instalment || "11";
@@ -112,7 +113,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
           .receipt-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; text-align: center; }
           .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px dashed #ccc; }
           .detail-label { font-weight: bold; flex: 1; }
-          .detail-value { flex: 1; text-align: right; }
+          .detail-value { flex: 1; text-align: left; }
           .amount-section { background-color: #f5f5f5; padding: 12px; margin: 16px 0; border-radius: 6px; text-align: center; }
           .amount { font-size: 20px; font-weight: bold; color: #2c5aa0; }
           .footer { text-align: center; margin-top: 20px; padding-top: 10px; border-top: 2px solid #000; font-style: italic; }
@@ -122,11 +123,17 @@ const PaymentDetailScreen = ({ navigation, route }) => {
       <body>
         <div class="receipt-container">
           <div class="header">
-            <div class="company-name">BMG JEWELLERS PVT LTD</div>
+            <div class="company-name">AKJ Mini Gold Souk</div>
             <div class="address">Madurai-625001</div>
           </div>
           <div class="receipt-title">INSTALLMENT RECEIPT - CUSTOMER COPY</div>
-          <div class="timestamp">Generated on: ${formattedDate} at ${formattedTime}</div>
+<div class="timestamp">Generated on: ${formattedDate} at ${formattedTime}</div>
+          <div class="detail-row"><span class="detail-label">NAME:</span><span class="detail-value">${customerName}</span></div>
+          <div class="detail-row"><span class="detail-label">PERSONAL ID:</span><span class="detail-value">${personalId}</span></div>
+          <div class="detail-row"><span class="detail-label">SCHEME:</span><span class="detail-value">${
+            schemeDetails.schemeName?.trim() || schemeName || "DREAM GOLD PLAN"
+          }</span></div>
+          
           <div class="detail-row"><span class="detail-label">DATE:</span><span class="detail-value">${formatDate(
             payment.updateTime
           )}</span></div>
@@ -137,11 +144,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
           <div class="detail-row"><span class="detail-label">REC NO:</span><span class="detail-value">${
             payment.receiptNo || "N/A"
           }</span></div>
-          <div class="detail-row"><span class="detail-label">NAME:</span><span class="detail-value">${customerName}</span></div>
-          <div class="detail-row"><span class="detail-label">PERSONAL ID:</span><span class="detail-value">${personalId}</span></div>
-          <div class="detail-row"><span class="detail-label">SCHEME:</span><span class="detail-value">${
-            schemeDetails.schemeName?.trim() || schemeName || "DREAM GOLD PLAN"
-          }</span></div>
+          
           <div class="detail-row"><span class="detail-label">INSTALLMENT NO:</span><span class="detail-value">${
             payment.installment || "N/A"
           }</span></div>
@@ -159,7 +162,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
             amountReceived
           ).toLocaleString("en-IN")}/-</span></div>
           <div class="detail-row"><span class="detail-label">INSTALLMENTS PAID:</span><span class="detail-value">${insPaid}/${totalIns}</span></div>
-          <div class="footer">For BMG JEWELLERS PVT LTD</div>
+          <div class="footer">For AKJ Mini Gold Souk</div>
         </div>
       </body>
       </html>
@@ -193,7 +196,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
 
   return (
     <ImageBackground
-      source={require("../../assets/bg6.jpg")}
+      source={require("../../assets/bg7.jpg")}
       style={styles.mainBackground}
       imageStyle={styles.backgroundImageStyle}
     >
@@ -223,8 +226,8 @@ const PaymentDetailScreen = ({ navigation, route }) => {
         >
           <View style={styles.receiptContainer}>
             <View style={styles.receiptHeader}>
-              <Text style={styles.companyName}>BMG JEWELLERS PVT LTD</Text>
-              <Text style={styles.companyAddress}>Madurai-625001</Text>
+              <Text style={styles.companyName}>AKJ Mini Gold Souk</Text>
+              <Text style={styles.companyAddress}>Chennai-600002</Text>
             </View>
             <Text style={styles.receiptTitle}>Customer Payment Copy</Text>
             <View style={styles.detailsGrid}>
@@ -237,7 +240,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
                   "DREAM GOLD PLAN"
                 }
               />
-              <DetailRow label="GROUP CODE" value={groupCode} />
+              <DetailRow label="USER ID" value={personalId || "N/A"} />
               <DetailRow label="DATE" value={formatDate(payment.updateTime)} />
               <DetailRow
                 label="TIME"
@@ -273,7 +276,7 @@ const PaymentDetailScreen = ({ navigation, route }) => {
               value={`${insPaid}/${totalIns}`}
             />
             <View style={styles.footer}>
-              <Text style={styles.footerText}>For BMG JEWELLERS PVT LTD</Text>
+              <Text style={styles.footerText}>For AKJ Mini Gold Souk</Text>
             </View>
           </View>
 
@@ -300,8 +303,8 @@ const styles = StyleSheet.create({
   receiptContainer: {
     backgroundColor: COLORS.card1,
     borderRadius: SIZES.radius_lg,
-    padding: moderateScale(16),
-    marginBottom: moderateScale(16),
+    padding: moderateScale(7),
+    marginBottom: moderateScale(14),
   },
   receiptHeader: {
     alignItems: "center",
@@ -312,11 +315,12 @@ const styles = StyleSheet.create({
   },
   companyName: {
     ...FONTS.heading,
-    fontSize: SIZES.h5,
-    lineHeight: moderateScale(24),
+    fontSize: SIZES.h4 - 1,
+    lineHeight: moderateScale(32),
     textAlign: "center",
     marginBottom: moderateScale(2),
     color: COLORS.primary,
+    padding: moderateScale(4),
   },
   companyAddress: {
     ...FONTS.body1,
@@ -345,7 +349,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     ...FONTS.subheading,
-    fontSize: SIZES.h6 - 2,
+    fontSize: SIZES.h6,
     color: COLORS.text,
     flex: 1,
     textAlign: "left",

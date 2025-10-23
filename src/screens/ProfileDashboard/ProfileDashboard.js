@@ -15,7 +15,7 @@ function ProfileDashboard(props) {
 
   return (
     <ImageBackground
-      source={require('../../assets/bg6.jpg')}
+      source={require('../../assets/bg7.jpg')}
       style={styles.backgroundImage}
       resizeMode="cover"
     >

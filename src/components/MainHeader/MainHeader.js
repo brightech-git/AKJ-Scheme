@@ -173,8 +173,8 @@ function Header() {
   return (
     <LinearGradient
       colors={[COLORS.gradientcolor7, COLORS.gradientcolor8]} // Gold to Orange gradient - you can change these colors
-      start={{ x: 0, y: 1 }}
-      end={{ x: 1, y: 0 }}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
       style={styles.headerContainer1}
     >
       {/* Top Header Section */}
@@ -200,7 +200,7 @@ function Header() {
             />
           </View>
           <View style={styles.companyNameContainer}>
-            <Text style={styles.companyName}>AKJ JEWELLERS</Text>
+            <Text style={styles.companyName}>AKJ Mini Gold Souk</Text>
             {/* <Text style={styles.companySubtitle}>Pvt Ltd</Text> */}
           </View>
         </View>

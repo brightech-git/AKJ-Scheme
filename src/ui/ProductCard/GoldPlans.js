@@ -19,7 +19,7 @@ function GoldPlan(props) {
     <TouchableOpacity style={[styles.cardContainer, props.styles]}>
       {/* 🔥 Gradient Background */}
       <LinearGradient
-        colors={[COLORS.gradientcolor7, COLORS.gradientcolor8]}
+        colors={[COLORS.gradientcolor9, COLORS.gradientcolor10]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.gradientBackground}
@@ -49,7 +49,10 @@ function GoldPlan(props) {
 
           <TouchableOpacity
             style={styles.payButton}
-            onPress={() => navigation.navigate("AddNewMember", { schemeId })}
+            onPress={() => {
+              console.log("Navigating with data:", { schemeId, schemeName });
+              navigation.navigate("AddNewMember", { schemeId, schemeName });
+            }}
           >
             <TextDefault style={styles.payButtonText}>Join Scheme</TextDefault>
           </TouchableOpacity>
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(5),
   },
   text: {
-    color: colors.greenColor,
+    color: COLORS.goldtext,
     fontSize: scale(12),
     fontWeight: "bold",
     ...FONTS.body1,
@@ -103,19 +106,19 @@ const styles = StyleSheet.create({
   },
   payButtonText: {
     color: colors.black,
-  
+
     fontWeight: "bold",
     textAlign: "center",
-     ...FONTS.body1,
-     fontSize:SIZES.fontSm,
+    ...FONTS.body1,
+    fontSize: SIZES.fontSm,
   },
   description: {
-    color: colors.white,
+    color: COLORS.goldtext,
     fontSize: 14,
     marginBottom: 20,
     fontWeight: "bold",
-     ...FONTS.body,
-     fontSize:SIZES.h4,
+    ...FONTS.body,
+    fontSize: SIZES.h4,
   },
   schemeText: {
     color: colors.greenColor,

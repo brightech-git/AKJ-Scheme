@@ -225,7 +225,7 @@ const PaymentHistoryScreen = ({ navigation, route }) => {
 
   return (
     <ImageBackground
-      source={require("../../assets/bg6.jpg")}
+      source={require("../../assets/bg7.jpg")}
       style={styles.mainBackground}
       imageStyle={styles.backgroundImageStyle}
     >
@@ -243,7 +243,7 @@ const PaymentHistoryScreen = ({ navigation, route }) => {
           backIconName="arrow-back"
           backIconColor={COLORS.white}
           backgroundColor="transparent"
-          textColor={COLORS.black}
+          textColor={COLORS.white}
           transparent={true}
           centerTitle={true}
           rightComponent={
@@ -282,6 +282,11 @@ const PaymentHistoryScreen = ({ navigation, route }) => {
                 <Text style={styles.summaryTitle} numberOfLines={1}>
                   {schemeName ||
                     accountDetails?.schemeSummary?.schemeName?.trim() ||
+                    "DREAM GOLD PLAN"}
+                </Text>
+                <Text style={styles.summaryTitle1} numberOfLines={1}>
+                  {accountDetails?.schemeSummary?.schemeName?.trim() || schemeName ||
+                    
                     "DREAM GOLD PLAN"}
                 </Text>
               </View>
@@ -385,7 +390,7 @@ const PaymentHistoryScreen = ({ navigation, route }) => {
                     <MaterialIcons
                       name="inbox"
                       size={48}
-                      color={COLORS.borderColor}
+                      color={COLORS.textLight}
                     />
                   </View>
                   <Text style={styles.emptyStateText}>
@@ -410,9 +415,10 @@ const PaymentHistoryScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   mainBackground: {
     flex: 1,
+    backgroundColor: COLORS.background,
   },
   backgroundImageStyle: {
-    opacity: 0.3,
+    opacity: 0.1,
   },
   container: {
     flex: 1,
@@ -432,17 +438,17 @@ const styles = StyleSheet.create({
     paddingBottom: moderateScale(24),
   },
   summaryCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: COLORS.card,
     borderRadius: SIZES.radius_lg,
     padding: moderateScale(20),
     marginBottom: moderateScale(20),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 10,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.8)",
+    borderColor: COLORS.borderColor,
   },
   summaryHeader: {
     flexDirection: "row",
@@ -454,15 +460,23 @@ const styles = StyleSheet.create({
     width: moderateScale(48),
     height: moderateScale(48),
     borderRadius: moderateScale(14),
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surfaceVariant,
     justifyContent: "center",
     alignItems: "center",
   },
   summaryTitle: {
-    ...FONTS.heading,
+    ...FONTS.h6,
     color: COLORS.title,
     flex: 1,
     fontSize: SIZES.h6,
+  },
+  summaryTitle1: {
+    ...FONTS.h6,
+    color: COLORS.textLight,
+    flex: 1,
+    fontSize: SIZES.h6,
+    alignSelf: "center",
+    alignItems:"flex-end"
   },
   summaryStats: {
     flexDirection: "row",
@@ -480,7 +494,7 @@ const styles = StyleSheet.create({
     width: moderateScale(40),
     height: moderateScale(40),
     borderRadius: moderateScale(12),
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceVariant,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -511,7 +525,7 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: COLORS.surface,
     paddingHorizontal: moderateScale(16),
     paddingVertical: moderateScale(10),
     borderRadius: moderateScale(24),
@@ -520,16 +534,16 @@ const styles = StyleSheet.create({
     gap: moderateScale(6),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   filterChipActive: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
     shadowColor: COLORS.primary,
-    shadowOpacity: 0.3,
-    elevation: 4,
+    shadowOpacity: 0.5,
+    elevation: 6,
   },
   filterChipText: {
     ...FONTS.body1,
@@ -541,7 +555,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   filterChipBadge: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceVariant,
     paddingHorizontal: moderateScale(8),
     paddingVertical: moderateScale(3),
     borderRadius: moderateScale(12),
@@ -560,16 +574,16 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   historySection: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: COLORS.card,
     borderRadius: SIZES.radius_lg,
     padding: moderateScale(20),
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    borderColor: COLORS.borderColor,
     marginBottom: moderateScale(20),
   },
   historySectionHeader: {
@@ -586,7 +600,7 @@ const styles = StyleSheet.create({
   historyCount: {
     ...FONTS.body1,
     color: COLORS.textLight,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceVariant,
     paddingHorizontal: moderateScale(12),
     paddingVertical: moderateScale(6),
     borderRadius: moderateScale(14),
@@ -606,9 +620,9 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.primary,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 4,
   },
   lastCard: {
     marginBottom: 0,
@@ -624,9 +638,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 4,
+    elevation: 5,
   },
   transactionContent: {
     flex: 1,
@@ -683,7 +697,7 @@ const styles = StyleSheet.create({
     width: moderateScale(80),
     height: moderateScale(80),
     borderRadius: moderateScale(40),
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.surfaceVariant,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: moderateScale(16),

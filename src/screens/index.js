@@ -24,6 +24,8 @@ import RegisterPage from './OtpScreen/RegisterPage'
 import LoginPage from './OtpScreen/LoginPage'
 import PaymentDetailScreen from './PaymentHistory/DetailModal'
 import PaymentGateway from './PaymentGateway/PaymentGateway'
+import PaymentSuccess from './Buy/PaymentSuccess'
+import PaymentWebView from './Buy/PaymentWebView'
 
 export {
   MainLanding,
@@ -50,5 +52,7 @@ export {
   RegisterPage,
   LoginPage,
   PaymentDetailScreen,
-  PaymentGateway
+  PaymentGateway,
+  PaymentSuccess,
+  PaymentWebView
 }

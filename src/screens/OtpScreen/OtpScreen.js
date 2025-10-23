@@ -223,7 +223,7 @@ function OtpPage({ navigation, route }) {
         await AsyncStorage.removeItem("tempUserData");
         stopListener && stopListener();
         setShowFullScreenLoader(false); // 🔹 Hide loader on success
-        navigation.navigate("MainLanding");
+        navigation.navigate("LoginPage");
       } else {
         showToast(res.error || "OTP verification failed");
         clearOtp();
@@ -282,7 +282,7 @@ function OtpPage({ navigation, route }) {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <ImageBackground
-        source={require("../../assets/bg6.jpg")}
+        source={require("../../assets/bg7.jpg")}
         style={styles.backgroundImage}
       >
         <KeyboardAvoidingView

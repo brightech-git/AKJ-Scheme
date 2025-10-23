@@ -29,8 +29,7 @@ function HelpCenterPage() {
   }
 
   const handleOpenMap = () => {
-    const address =
-      'M/s. BMG Jewellers Pvt Ltd, 160, Melamasi St, Madurai-625001'
+    const address = 'Old # 52, New # 68, Ellis Road, Mount Road, Chennai 600002, Tamilnadu, India'
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
     Linking.openURL(url)
   }
@@ -45,7 +44,7 @@ function HelpCenterPage() {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('../../assets/bg6.jpg')}
+        source={require('../../assets/bg7.jpg')}
         style={styles.backgroundImage}
         resizeMode="cover"
       >
@@ -66,25 +65,33 @@ function HelpCenterPage() {
             >
               <View style={styles.cardHeader}>
                 <View style={[styles.iconContainer, styles.phoneIconContainer]}>
-                  <Icon name='phone' size={24} color={COLORS.primary} />
+                  <Icon name='phone' size={24} color={COLORS.goldtext} />
                 </View>
                 <Text style={styles.cardTitle}>Phone Numbers</Text>
               </View>
 
               <TouchableOpacity
                 style={styles.contactItem}
-                onPress={() => handlePhoneCall('919514333601')}
+                onPress={() => handlePhoneCall('04442157157')}
               >
-                <Text style={styles.contactText}>+91-95143 33601</Text>
-                <Icon name='call' size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>044 42 157 157</Text>
+                <Icon name='call' size={20} color={COLORS.goldtext} />
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.contactItem}
-                onPress={() => handlePhoneCall('919514333609')}
+                onPress={() => handlePhoneCall('04428588888')}
               >
-                <Text style={styles.contactText}>+91-95143 33609</Text>
-                <Icon name='call' size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>044 2858 8888</Text>
+                <Icon name='call' size={20} color={COLORS.goldtext} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.contactItem}
+                onPress={() => handlePhoneCall('04428580506')}
+              >
+                <Text style={styles.contactText}>044 2858 0506</Text>
+                <Icon name='call' size={20} color={COLORS.goldtext} />
               </TouchableOpacity>
             </LinearGradient>
 
@@ -97,17 +104,17 @@ function HelpCenterPage() {
             >
               <View style={styles.cardHeader}>
                 <View style={[styles.iconContainer, styles.emailIconContainer]}>
-                  <Icon name='email' size={24} color={COLORS.primary} />
+                  <Icon name='email' size={24} color={COLORS.goldtext} />
                 </View>
                 <Text style={styles.cardTitle}>Email Address</Text>
               </View>
 
               <TouchableOpacity
                 style={styles.contactItem}
-                onPress={() => handleEmail('Contact@bmgjewellers.in')}
+                onPress={() => handleEmail('care@akjminigoldsouk.com')}
               >
-                <Text style={styles.contactText}>Contact@bmgjewellers.in</Text>
-                <Icon name='mail-outline' size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>care@akjminigoldsouk.com</Text>
+                <Icon name='mail-outline' size={20} color={COLORS.goldtext} />
               </TouchableOpacity>
             </LinearGradient>
 
@@ -122,7 +129,7 @@ function HelpCenterPage() {
                 <View
                   style={[styles.iconContainer, styles.locationIconContainer]}
                 >
-                  <Icon name='location-on' size={24} color={COLORS.primary} />
+                  <Icon name='location-on' size={24} color={COLORS.goldtext} />
                 </View>
                 <Text style={styles.cardTitle}>Office Address</Text>
               </View>
@@ -133,13 +140,19 @@ function HelpCenterPage() {
               >
                 <View style={styles.addressContainer}>
                   <Text style={styles.contactText}>
-                    M/s. BMG Jewellers Pvt Ltd
+                    AKJ Mini Gold Souk
                   </Text>
                   <Text style={styles.contactText}>
-                    160, Melamasi St, Madurai-625001
+                    Old # 52, New # 68, Ellis Road
+                  </Text>
+                  <Text style={styles.contactText}>
+                    Mount Road, Chennai 600002
+                  </Text>
+                  <Text style={styles.contactText}>
+                    Tamilnadu, India
                   </Text>
                 </View>
-                <Icon name='place' size={20} color={COLORS.primary} />
+                <Icon name='place' size={20} color={COLORS.goldtext} />
               </TouchableOpacity>
             </LinearGradient>
           </View>
@@ -167,21 +180,21 @@ function HelpCenterPage() {
                   handleWhatsApp('Hello! I need help via Live Chat.')
                 }
               >
-                <Icon name='chat' size={24} color={COLORS.primary} />
+                <Icon name='chat' size={24} color={COLORS.goldtext} />
                 <Text style={styles.actionText}>Live Chat</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => handleWhatsApp('I would like to see the FAQs.')}
               >
-                <Icon name='help-outline' size={24} color={COLORS.primary} />
+                <Icon name='help-outline' size={24} color={COLORS.goldtext} />
                 <Text style={styles.actionText}>FAQs</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={() => handlePhoneCall('919514333601')}
+                onPress={() => handlePhoneCall('04442157157')}
               >
-                <Icon name='description' size={24} color={COLORS.primary} />
+                <Icon name='description' size={24} color={COLORS.goldtext} />
                 <Text style={styles.actionText}>Support</Text>
               </TouchableOpacity>
             </View>
@@ -253,7 +266,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     ...FONTS.h5,
-    color: COLORS.primary
+    color: COLORS.goldtext
   },
   contactItem: {
     flexDirection: 'row',
@@ -288,7 +301,7 @@ const styles = StyleSheet.create({
   },
   hoursTitle: {
     ...FONTS.h5,
-    color: COLORS.primary,
+    color: COLORS.goldtext,
     marginBottom: verticalScale(16),
     textAlign: 'center'
   },
@@ -306,7 +319,7 @@ const styles = StyleSheet.create({
   },
   hoursTime: { 
     ...FONTS.font, 
-    color: COLORS.primary, 
+    color: COLORS.goldtext1, 
     fontWeight: '600' 
   },
   actionsContainer: {
@@ -324,7 +337,7 @@ const styles = StyleSheet.create({
   },
   actionsTitle: {
     ...FONTS.h5,
-    color: COLORS.primary,
+    color: COLORS.goldtext,
     marginBottom: verticalScale(16),
     textAlign: 'center'
   },
@@ -343,7 +356,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     ...FONTS.fontSm,
-    color: COLORS.primary,
+    color: COLORS.goldtext1,
     marginTop: verticalScale(8),
     textAlign: 'center',
     fontWeight: '600'

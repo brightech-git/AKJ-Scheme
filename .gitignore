@@ -1,0 +1,16 @@
+# Ignore node modules
+/node_modules
+
+# Ignore build folders
+/android
+/ios
+/build
+
+# Ignore Expo/Metro cache
+.expo
+*.expo
+
+# Ignore logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

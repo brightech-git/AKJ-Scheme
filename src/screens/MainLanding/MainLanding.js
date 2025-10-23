@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   FlatList,
@@ -9,12 +9,14 @@ import {
   ToastAndroid,
   Platform,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
+  Animated,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { BottomTab, TextDefault, Slider } from "../../components";
 import GoldPlan from "../../ui/ProductCard/GoldPlans";
 import ProductCard from "../../ui/ProductCard/ProductCard";
-import { SafeAreaView } from "react-native-safe-area-context";
 import styles from "./styles";
 import { colors1 } from "../../utils/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -24,9 +26,11 @@ import MainPageWithYouTube from "../Youtube/Youtube";
 import MainHeader from "../../components/MainHeader/MainHeader";
 import OtpModal from "../../components/VerifyPhone/VerifyPhone";
 import { API_BASE_URL_OLD } from "../../Config/API";
+import { moderateScale } from "../../utils/scaling";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// ------------------- CONSTANTS -------------------
 const API_ENDPOINTS = {
   phoneSearch: (phoneNo) =>
     `${API_BASE_URL_OLD}/account/phonesearch?phoneNo=${phoneNo}`,
@@ -41,6 +45,15 @@ const API_ENDPOINTS = {
   schemes: `${API_BASE_URL_OLD}/member/scheme`,
 };
 
+const CARD_WIDTHS = {
+  product: SCREEN_WIDTH * moderateScale(0.9),
+  goldPlan: SCREEN_WIDTH * moderateScale(0.75),
+};
+
+const SKELETON_COUNT = 3;
+const FETCH_TIMEOUT = 15000; // 15 seconds
+
+// ------------------- UTILITIES -------------------
 const showToast = (message) => {
   if (Platform.OS === "android") {
     ToastAndroid.show(message, ToastAndroid.SHORT);
@@ -49,8 +62,12 @@ const showToast = (message) => {
   }
 };
 
+// Enhanced fetch hook with timeout and retry logic
 const useFetchWithError = () => {
   const fetchData = useCallback(async (url, options = {}) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+
     try {
       const response = await fetch(url, {
         method: "GET",
@@ -58,21 +75,32 @@ const useFetchWithError = () => {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
+        signal: controller.signal,
         ...options,
       });
+
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+
+      const data = await response.json();
+      return data;
     } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout. Please check your connection.');
+      }
+      
       console.error(`Error fetching ${url}:`, error);
       throw error;
     }
   }, []);
+
   return fetchData;
 };
-
-
 
 // ------------------- SWIPEABLE CARDS COMPONENT -------------------
 const SwipeableCards = React.memo(
@@ -84,20 +112,54 @@ const SwipeableCards = React.memo(
     renderSkeleton,
     emptyMessage,
     cardWidth = SCREEN_WIDTH * 0.9,
+    skeletonCount = SKELETON_COUNT,
   }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
-    const onMomentumScrollEnd = (event) => {
-      const contentOffset = event.nativeEvent.contentOffset.x;
-      const index = Math.round(contentOffset / cardWidth);
-      setCurrentIndex(index);
-    };
+    useEffect(() => {
+      if (!loading && data?.length > 0) {
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }
+    }, [loading, data, fadeAnim]);
+
+    const onMomentumScrollEnd = useCallback(
+      (event) => {
+        const contentOffset = event.nativeEvent.contentOffset.x;
+        const index = Math.round(contentOffset / cardWidth);
+        setCurrentIndex(index);
+      },
+      [cardWidth]
+    );
+
+    const getItemLayout = useCallback(
+      (_, index) => ({
+        length: cardWidth,
+        offset: cardWidth * index,
+        index,
+      }),
+      [cardWidth]
+    );
+
+    const keyExtractor = useCallback((item, index) => {
+      if (item?.regno && item?.groupcode) {
+        return `${item.regno}-${item.groupcode}-${index}`;
+      }
+      if (item?.schemeId) {
+        return `${item.schemeId}-${index}`;
+      }
+      return `item-${index}`;
+    }, []);
 
     if (loading) {
       return (
         <View style={styles.swipeableContainer}>
           <FlatList
-            data={Array(3).fill()}
+            data={Array(skeletonCount).fill(null)}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
@@ -106,28 +168,33 @@ const SwipeableCards = React.memo(
                 {renderSkeleton(index)}
               </View>
             )}
-            keyExtractor={(_, index) => index.toString()}
+            keyExtractor={(_, index) => `skeleton-${index}`}
+            getItemLayout={getItemLayout}
           />
         </View>
       );
     }
 
-    // FIXED: Check for empty data after loading is complete
     if (error || !data || data.length === 0) {
       return (
         <View style={styles.emptyStateContainer}>
-          <TextDefault
-            textColor={colors1.error}
-            style={{ textAlign: "center", marginTop: 20 }}
-          >
-            {error || emptyMessage || "No data available"}
-          </TextDefault>
+          <View style={styles.emptyStateContent}>
+            <Text style={styles.emptyStateIcon}>
+              {error ? "⚠️" : "📦"}
+            </Text>
+            <TextDefault
+              textColor={error ? colors1.error : colors1.textSecondary}
+              style={styles.emptyStateText}
+            >
+              {error || emptyMessage || "No data available"}
+            </TextDefault>
+          </View>
         </View>
       );
     }
 
     return (
-      <View style={styles.swipeableContainer}>
+      <Animated.View style={[styles.swipeableContainer, { opacity: fadeAnim }]}>
         <FlatList
           data={data}
           horizontal
@@ -139,97 +206,127 @@ const SwipeableCards = React.memo(
               {renderItem(item, index)}
             </View>
           )}
-          keyExtractor={(item, index) =>
-            item.regno && item.groupcode
-              ? `${item.regno}-${item.groupcode}-${index}`
-              : item.schemeId
-              ? `${item.schemeId}-${index}`
-              : index.toString()
-          }
+          keyExtractor={keyExtractor}
           decelerationRate="fast"
           snapToInterval={cardWidth}
           snapToAlignment="center"
+          getItemLayout={getItemLayout}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
 
-        {/* Pagination Dots */}
         {data.length > 1 && (
           <View style={styles.paginationContainer}>
             {data.map((_, index) => (
               <View
-                key={index}
+                key={`dot-${index}`}
                 style={[
                   styles.paginationDot,
-                  {
-                    backgroundColor:
-                      index === currentIndex
-                        ? colors1.primary
-                        : colors1.lightGray,
-                  },
+                  index === currentIndex && styles.paginationDotActive,
                 ]}
               />
             ))}
           </View>
         )}
-      </View>
+      </Animated.View>
     );
   }
 );
 
+SwipeableCards.displayName = "SwipeableCards";
+
 // ------------------- SECTION HEADER COMPONENT -------------------
-const SectionHeader = React.memo(({ title, onViewAll }) => (
+const SectionHeader = React.memo(({ title, onViewAll, showViewAll = true }) => (
   <View style={styles.sectionHeaderContainer}>
     <TextDefault textColor={colors1.primaryText} style={styles.titletext}>
       {title}
     </TextDefault>
-    <TouchableOpacity onPress={onViewAll}>
-      <TextDefault textColor={colors1.primary} H5 style={styles.viewAllText}>
-        View All
-      </TextDefault>
-    </TouchableOpacity>
+    {showViewAll && (
+      <TouchableOpacity
+        onPress={onViewAll}
+        activeOpacity={0.7}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        style={styles.viewAllButton}
+      >
+        <TextDefault textColor={colors1.text} style={styles.viewAllText}>
+          View All →
+        </TextDefault>
+      </TouchableOpacity>
+    )}
   </View>
 ));
+
+SectionHeader.displayName = "SectionHeader";
+
+// ------------------- INFO CARD COMPONENT -------------------
+const InfoCard = React.memo(({ title, description }) => (
+  <View style={styles.contentWrapper}>
+    <Text style={styles.contentText}>{title}</Text>
+    <Text style={styles.contentText1}>{description}</Text>
+  </View>
+));
+
+InfoCard.displayName = "InfoCard";
 
 // ------------------- MAIN LANDING COMPONENT -------------------
 function MainLanding() {
   const navigation = useNavigation();
   const fetchData = useFetchWithError();
+  const isMountedRef = useRef(true);
 
+  // State Management
   const [schemes, setSchemes] = useState([]);
   const [productData, setProductData] = useState([]);
   const [productLoading, setProductLoading] = useState(true);
   const [schemesLoading, setSchemesLoading] = useState(true);
-  const [schemesError, setSchemesError] = useState(null); // NEW: Separate error state for schemes
+  const [schemesError, setSchemesError] = useState(null);
   const [productError, setProductError] = useState(null);
-
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // ------------------- FETCH SCHEMES -------------------
   const fetchSchemes = useCallback(async () => {
     try {
       setSchemesLoading(true);
-      setSchemesError(null); // Reset error state
+      setSchemesError(null);
+
       const data = await fetchData(API_ENDPOINTS.schemes);
-      
-      // FIXED: Check if data is valid and has items
+
+      if (!isMountedRef.current) return;
+
       if (data && Array.isArray(data) && data.length > 0) {
-        setSchemes(
-          data.map((s) => ({
-            schemeId: s.SchemeId,
-            schemeName: s.schemeName,
-            description: s.SchemeSName,
-          }))
-        );
+        const mappedSchemes = data.map((s) => ({
+          schemeId: s.SchemeId,
+          schemeName: s.schemeName,
+          description: s.SchemeSName,
+        }));
+        setSchemes(mappedSchemes);
       } else {
         setSchemes([]);
-        setSchemesError("No Gold Plans available.");
+        setSchemesError("No Gold Plans available at the moment.");
       }
     } catch (error) {
+      if (!isMountedRef.current) return;
+      
       console.error("Error fetching schemes:", error);
-      setSchemesError("Failed to fetch Gold Plans");
+      setSchemesError(
+        error.message || "Unable to fetch Gold Plans. Please try again later."
+      );
       setSchemes([]);
       showToast("Failed to fetch Gold Plans");
     } finally {
-      setSchemesLoading(false);
+      if (isMountedRef.current) {
+        setSchemesLoading(false);
+      }
     }
   }, [fetchData]);
 
@@ -237,20 +334,28 @@ function MainLanding() {
   const fetchProductData = useCallback(async () => {
     setProductLoading(true);
     setProductError(null);
+
     try {
       const storedPhoneNumber = await AsyncStorage.getItem("userPhoneNumber");
-      if (!storedPhoneNumber) throw new Error("Phone number not found");
 
-      const phoneData = await fetchData(API_ENDPOINTS.phoneSearch(storedPhoneNumber));
+      if (!storedPhoneNumber || !/^\d{10}$/.test(storedPhoneNumber)) {
+        throw new Error("Invalid phone number");
+      }
+
+      const phoneData = await fetchData(
+        API_ENDPOINTS.phoneSearch(storedPhoneNumber)
+      );
+
+      if (!isMountedRef.current) return;
+
       if (!phoneData || phoneData.length === 0) {
-        setProductError("No Schemes available for this account");
+        setProductError("No schemes found for your account");
         setProductData([]);
         return;
       }
 
       const productPromises = phoneData.map(async (item) => {
-        const regno = item.regno;
-        const groupcode = item.groupcode;
+        const { regno, groupcode } = item;
         if (!regno || !groupcode) return null;
 
         try {
@@ -259,11 +364,16 @@ function MainLanding() {
             fetchData(API_ENDPOINTS.amountWeight(regno, groupcode)),
           ]);
 
-          const maturityDate = item.maturityDate ? new Date(item.maturityDate) : null;
+          const maturityDate = item.maturityDate
+            ? new Date(item.maturityDate)
+            : null;
           const isActive = maturityDate !== null;
-          const itemStatus = isActive ? "Active" : "Deactive";
+          const itemStatus = isActive ? "Active" : "Inactive";
 
-          const amountWeight = amountWeightData?.[0] ?? { Weight: 0, Amount: 0 };
+          const amountWeight = amountWeightData?.[0] ?? {
+            Weight: 0,
+            Amount: 0,
+          };
 
           return {
             ...item,
@@ -272,127 +382,161 @@ function MainLanding() {
             accountDetails: accountData,
           };
         } catch (err) {
-          console.error(`Error fetching account/amountWeight for ${regno}-${groupcode}:`, err);
+          console.error(
+            `Error fetching details for ${regno}-${groupcode}:`,
+            err
+          );
           return null;
         }
       });
 
       const resolvedData = await Promise.all(productPromises);
+      
+      if (!isMountedRef.current) return;
+      
       const validData = resolvedData.filter(Boolean);
 
       setProductData(validData);
+
       if (validData.length === 0) {
-        setProductError("No Schemes available for this account");
+        setProductError("No active schemes found");
       }
     } catch (err) {
+      if (!isMountedRef.current) return;
+      
       console.error("Error in fetchProductData:", err);
-      setProductError("No Schemes available for this account");
-      showToast("No Schemes available for this account");
+      setProductError(
+        err.message || "Unable to load your schemes"
+      );
+      setProductData([]);
+      showToast("Failed to load schemes");
     } finally {
-      setProductLoading(false);
+      if (isMountedRef.current) {
+        setProductLoading(false);
+      }
     }
   }, [fetchData]);
+
+  // ------------------- REFRESH HANDLER -------------------
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchSchemes(), fetchProductData()]);
+    if (isMountedRef.current) {
+      setRefreshing(false);
+    }
+  }, [fetchSchemes, fetchProductData]);
 
   // ------------------- INITIAL FETCH -------------------
   useEffect(() => {
     fetchSchemes();
   }, [fetchSchemes]);
-  
 
   useFocusEffect(
     useCallback(() => {
-      (async () => {
-        const storedPhone = await AsyncStorage.getItem("userPhoneNumber");
-        if (storedPhone && /^\d{10}$/.test(storedPhone)) {
-          fetchProductData();
-        } else {
-          setProductError("No Schemes available for this account");
-          setProductData([]);
-          setProductLoading(false);
-        }
-      })();
+      fetchProductData();
     }, [fetchProductData])
   );
 
+  // ------------------- HANDLERS -------------------
   const handleOtpVerified = useCallback(() => {
     fetchProductData();
   }, [fetchProductData]);
 
+  const handleNavigateToSchemes = useCallback(() => {
+    navigation.navigate("MyScheme");
+  }, [navigation]);
+
+  const handleNavigateToGoldPlans = useCallback(() => {
+    navigation.navigate("GoldPlanScreen");
+  }, [navigation]);
+
+  // ------------------- MEMOIZED RENDER ITEMS -------------------
+  const renderProductCard = useCallback(
+    (item) => (
+      <ProductCard
+        productData={item}
+        loading={false}
+        status={item.status}
+        navigation={navigation}
+        accountDetails={item.accountDetails}
+      />
+    ),
+    [navigation]
+  );
+
+  const renderGoldPlan = useCallback(
+    (scheme) => (
+      <GoldPlan
+        schemeId={scheme.schemeId}
+        schemeName={scheme.schemeName}
+        description={scheme.description}
+        styles={styles.itemCardContainer}
+      />
+    ),
+    []
+  );
+
+  const renderProductSkeleton = useCallback(
+    (index) => <ProductCardSkeleton key={`product-skeleton-${index}`} />,
+    []
+  );
+
+  const renderGoldPlanSkeleton = useCallback(
+    (index) => <GoldPlansSkeleton key={`gold-skeleton-${index}`} />,
+    []
+  );
+
   // ------------------- HEADER CONTENT -------------------
-  const renderHeaderContent = useCallback(
+  const headerContent = useMemo(
     () => (
       <>
-        <MainHeader />
+        <MainHeader style={styles.header} />
         <Slider />
 
-        <View style={styles.contentWrapper}>
-          <Text style={styles.contentText}>
-            Welcome to the Digital home of BMG Jewellers:
-          </Text>
-          <Text style={styles.contentText1}>
-            The ideal place to join a savings scheme and save up to buy your
-            dream jewels. BMG DIGIGOLD empowers you to save and buy jewels
-            conveniently in the palm of your hand. Start saving in gold from
-            today.
-          </Text>
-        </View>
+        <InfoCard
+          title="Welcome to the Digital home of AKJ Mini Gold Souk"
+          description="The ideal place to join a savings scheme and save up to buy your dream jewels. AKJ Mini Gold Souk empowers you to save and buy jewels conveniently in the palm of your hand. Start saving in gold from today."
+        />
 
         {/* Your Schemes */}
         <View style={styles.titleSpacer}>
           <SectionHeader
             title="Your Schemes"
-            onViewAll={() => navigation.navigate("MyScheme")}
+            onViewAll={handleNavigateToSchemes}
           />
 
           <SwipeableCards
             data={productData}
             loading={productLoading}
             error={productError}
-            emptyMessage="No Schemes available for this account"
-            renderItem={(item) => (
-              <ProductCard
-                productData={item}
-                loading={false}
-                status={item.status}
-                navigation={navigation}
-                accountDetails={item.accountDetails}
-              />
-            )}
-            renderSkeleton={(index) => <ProductCardSkeleton key={index} />}
+            emptyMessage="No schemes available for your account"
+            renderItem={renderProductCard}
+            renderSkeleton={renderProductSkeleton}
+            cardWidth={CARD_WIDTHS.product}
+            style={styles.cardWrapper}
           />
         </View>
+
+        <InfoCard
+          title="Customized Gold Plans for You"
+          description="Choose from a range of Gold Plans with unique benefits to suit your needs and convenience."
+        />
 
         {/* Gold Plans */}
-        <View style={styles.contentWrapper}>
-          <Text style={styles.contentText}>Customized Gold Plans for You:</Text>
-          <Text style={styles.contentText1}>
-            Choose from a range of Gold Plans with unique benefits to suit your
-            needs and convenience.
-          </Text>
-        </View>
-
-        <View style={[styles.titleSpacer, { flex: 1 }]}>
+        <View style={styles.titleSpacer}>
           <SectionHeader
             title="Gold Plans"
-            onViewAll={() => navigation.navigate("GoldPlanScreen")}
+            onViewAll={handleNavigateToGoldPlans}
           />
 
-          {/* FIXED: Use schemesError instead of null for error prop */}
           <SwipeableCards
             data={schemes}
             loading={schemesLoading}
             error={schemesError}
-            emptyMessage="No Gold Plans available."
-            renderItem={(scheme) => (
-              <GoldPlan
-                schemeId={scheme.schemeId}
-                schemeName={scheme.schemeName}
-                description={scheme.description}
-                styles={styles.itemCardContainer}
-              />
-            )}
-            renderSkeleton={(index) => <GoldPlansSkeleton key={index} />}
-            cardWidth={SCREEN_WIDTH * 0.75}
+            emptyMessage="No Gold Plans available at the moment"
+            renderItem={renderGoldPlan}
+            renderSkeleton={renderGoldPlanSkeleton}
+            cardWidth={CARD_WIDTHS.goldPlan}
           />
         </View>
 
@@ -411,29 +555,43 @@ function MainLanding() {
       </>
     ),
     [
-      navigation, 
-      productLoading, 
-      productError, 
-      productData, 
-      schemes, 
-      schemesLoading, 
-      schemesError // ADDED: schemesError dependency
+      productLoading,
+      productError,
+      productData,
+      schemes,
+      schemesLoading,
+      schemesError,
+      handleNavigateToSchemes,
+      handleNavigateToGoldPlans,
+      renderProductCard,
+      renderProductSkeleton,
+      renderGoldPlan,
+      renderGoldPlanSkeleton,
     ]
   );
 
   return (
-    <View style={[styles.flex, styles.safeAreaStyle]}>
+    <View style={styles.flex}>
       <ImageBackground
-        source={require("../../assets/bg6.jpg")}
+        source={require("../../assets/bg7.jpg")}
         style={styles.mainBackground}
         imageStyle={styles.backgroundImageStyle}
       >
         <FlatList
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={styles.flatListContent}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={renderHeaderContent}
+          ListHeaderComponent={headerContent}
           data={[]}
           renderItem={null}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors1.primary}
+              colors={[colors1.primary]}
+              progressBackgroundColor={colors1.surface}
+            />
+          }
         />
         <BottomTab screen="HOME" />
 

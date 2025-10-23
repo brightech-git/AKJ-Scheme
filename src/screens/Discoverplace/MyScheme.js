@@ -134,12 +134,17 @@ function DiscoverPlace({ navigation }) {
     fetchPhoneSearchData();
   };
 
-  const renderProductCard = ({ item }) => (
-    <ProductCard
-      productData={item}
-      navigation={navigation}
-    />
-  );
+const renderProductCard = ({ item }) => (
+  <ProductCard
+    productData={item}
+    navigation={navigation}
+    accountDetails={item.accountDetails}
+    status={item.status}
+    loading={loading}      // optional
+    error={error}          // optional
+  />
+);
+
 
   const renderContent = () => {
     if (loading) {
@@ -191,7 +196,7 @@ function DiscoverPlace({ navigation }) {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('../../assets/bg6.jpg')}
+        source={require('../../assets/bg7.jpg')}
         style={styles.mainBackground}
         imageStyle={styles.backgroundImageStyle}
       >

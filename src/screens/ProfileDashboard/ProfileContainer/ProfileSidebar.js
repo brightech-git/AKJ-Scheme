@@ -128,7 +128,7 @@ const DrawerMenu = ({ isVisible, onClose }) => {
 
   const renderIcon = (item) => {
     const IconComponent = MaterialIcons;
-    return <IconComponent name={item.icon} size={24} color={COLORS.primary} />;
+    return <IconComponent name={item.icon} size={24} color={COLORS.goldtext} />;
   };
 
   return (
@@ -181,7 +181,7 @@ const DrawerMenu = ({ isVisible, onClose }) => {
               <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
                 <View style={styles.menuItemContent}>
                   <View style={styles.iconContainer}>
-                    <MaterialIcons name="logout" size={24}  color={COLORS.primary} />
+                    <MaterialIcons name="logout" size={24}  color={COLORS.goldtext} />
                   </View>
                   <TextDefault style={styles.menuItemText}>Logout</TextDefault>
                 </View>
@@ -216,7 +216,7 @@ const styles = {
     flex: 1,
   },
   profileHeader: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.black2,
     paddingVertical: 40,
     paddingHorizontal: 20,
     alignItems: "center",
@@ -239,24 +239,25 @@ const styles = {
   welcomeText: {
     fontSize: 20,
     // fontWeight: "bold",
-    color: "#333",
+    color: COLORS.goldtext,
     marginBottom: 5,
     ...FONTS.heading
   },
   phoneText: {
     fontSize: 16,
-    color: "#666",
+    color: COLORS.goldtext1,
     ...FONTS.body1
   },
   menuContainer: {
     flex: 1,
     paddingTop: 10,
+    backgroundColor: COLORS.black2,
   },
   menuItem: {
     paddingVertical: 15,
     paddingHorizontal: 20,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#F0F0F0",
+    // borderBottomWidth: 0.5,
+    // borderBottomColor: "#F0F0F0",
   },
   menuItemContent: {
     flexDirection: "row",
@@ -268,7 +269,7 @@ const styles = {
   },
   menuItemText: {
     fontSize: 16,
-    color: "#333",
+    color: COLORS.text,
     marginLeft: 15,
     ...FONTS.body1
   },

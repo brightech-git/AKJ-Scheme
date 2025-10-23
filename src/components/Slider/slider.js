@@ -66,10 +66,10 @@ export default function EnhancedSlider() {
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const FALLBACK_BANNERS = [
-    { id: 1, image_path: '../../assets/image/slider3.jpg', url: 'https://bmgjewellers.com/shop-left?itemName=EARRINGS' },
-    { id: 2, image_path: '../../assets/image/slider2.jpg', url: 'https://bmgjewellers.com/shop-left?itemName=NECKLACES' },
-    { id: 3, image_path: '../../assets/image/slider1.jpg', url: 'https://bmgjewellers.com/shop-left?itemName=FESTIVAL' },
-    { id: 4, image_path: '../../assets/image/slider1.jpg', url: 'https://bmgjewellers.com/shop-left?itemName=FESTIVAL' },
+    { id: 1, image_path: '../../assets/image/slider3.jpg', url: 'https://akjminigoldsouk.com/' },
+    { id: 2, image_path: '../../assets/image/slider2.jpg', url: 'https://akjminigoldsouk.com/' },
+    { id: 3, image_path: '../../assets/image/slider1.jpg', url: 'https://akjminigoldsouk.com/' },
+    { id: 4, image_path: '../../assets/image/slider1.jpg', url: 'https://akjminigoldsouk.com/' },
   ];
 
   // Fetch banners

@@ -267,7 +267,7 @@ function RegisterPage({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <ImageBackground 
-        source={require("../../assets/bg6.jpg")} 
+        source={require("../../assets/bg7.jpg")} 
         style={styles.backgroundImage}
       >
         <KeyboardAvoidingView 

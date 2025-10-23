@@ -33,9 +33,51 @@ const showToast = (message) => {
   }
 };
 
+// Common logout function to clear all user data
+const handleCompleteLogout = async (navigation) => {
+  try {
+    // Clear all authentication related data
+    await AsyncStorage.multiRemove([
+      "mpin",
+      "isMpinCreated",
+      "isOtpVerified",
+      "userToken",
+      "userData",
+      "userId",
+      "userProfile",
+      "loginCredentials",
+      "rememberMe",
+    ]);
+    
+    showToast("Logged out successfully");
+    // Navigate to login page
+    navigation.replace("LoginPage");
+  } catch (error) {
+    console.error("Error during logout:", error);
+    showToast("Error during logout. Please try again.");
+  }
+};
+
+// Common reset MPIN function
+const handleResetMpin = async (navigation) => {
+  Alert.alert(
+    "Reset MPIN",
+    "Are you sure you want to reset your MPIN? This will log you out and you'll need to login again.",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reset",
+        style: "destructive",
+        onPress: () => handleCompleteLogout(navigation),
+      },
+    ]
+  );
+};
+
 function MpinScreen({ route, navigation }) {
   const [mpin, setMpin] = useState(["", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isWeakMpin, setIsWeakMpin] = useState(false);
   const inputRefs = useRef([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -72,12 +114,34 @@ function MpinScreen({ route, navigation }) {
     }
   };
 
+  const checkWeakMpin = (enteredMpin) => {
+    // Check for common weak patterns
+    const weakPatterns = [
+      /^(\d)\1{3}$/, // All same digits (1111, 2222, etc.)
+      /^1234$/, // Sequential ascending
+      /^4321$/, // Sequential descending
+      /^0000$/, // Common default
+      /^2580$/, // Vertical line
+      /^0852$/, // Vertical line reverse
+    ];
+    
+    return weakPatterns.some(pattern => pattern.test(enteredMpin));
+  };
+
   const handleMpinChange = (value, index) => {
     if (value && !/^\d$/.test(value)) return;
 
     const newMpin = [...mpin];
     newMpin[index] = value;
     setMpin(newMpin);
+
+    // Check for weak MPIN when all digits are entered
+    if (newMpin.every(digit => digit !== "") && index === 3) {
+      const enteredMpin = newMpin.join("");
+      setIsWeakMpin(checkWeakMpin(enteredMpin));
+    } else {
+      setIsWeakMpin(false);
+    }
 
     if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
@@ -100,6 +164,16 @@ function MpinScreen({ route, navigation }) {
       return;
     }
 
+    // Check if MPIN is too simple
+    if (checkWeakMpin(enteredMpin)) {
+      Alert.alert(
+        "Weak MPIN",
+        "This MPIN is too easy to guess. Please choose a more secure combination.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
       await AsyncStorage.setItem("mpin", enteredMpin);
@@ -116,34 +190,9 @@ function MpinScreen({ route, navigation }) {
     }
   };
 
-  const handleForgotMpin = async () => {
-    Alert.alert(
-      "Reset MPIN",
-      "Are you sure you want to reset your MPIN?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Reset",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem("mpin");
-              await AsyncStorage.removeItem("isMpinCreated");
-              await AsyncStorage.removeItem("isOtpVerified");
-              navigation.replace("LoginPage");
-            } catch (error) {
-              showToast("Failed to reset MPIN. Please try again.");
-              console.error(error);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   return (
     <ImageBackground
-      source={require("../../assets/bg6.jpg")}
+      source={require("../../assets/bg7.jpg")}
       style={styles.backgroundImage}
     >
       <KeyboardAvoidingView
@@ -162,11 +211,11 @@ function MpinScreen({ route, navigation }) {
             <View style={styles.logoCard}>
               <View style={styles.logoRow}>
                 <Image
-                  source={require("../../assets/logo2.png")}
+                  source={require("../../assets/logo.jpg")}
                   style={styles.logoImage}
                 />
                 <TextDefault style={styles.logoText}>
-                  AKJ Jewellers
+                  AKJ Mini Gold Souk
                 </TextDefault>
               </View>
               <TextDefault style={styles.subtitleText}>
@@ -197,6 +246,7 @@ function MpinScreen({ route, navigation }) {
                       style={[
                         styles.mpinInput,
                         digit ? styles.mpinInputFilled : {},
+                        isWeakMpin ? styles.errorState : {},
                       ]}
                       maxLength={1}
                       keyboardType="numeric"
@@ -211,11 +261,21 @@ function MpinScreen({ route, navigation }) {
                   </View>
                 ))}
               </View>
+
+              {isWeakMpin && (
+                <TextDefault style={styles.weakMpinWarning}>
+                  This MPIN is too easy to guess. Please choose a stronger one.
+                </TextDefault>
+              )}
+
+              <TextDefault style={styles.securityNote}>
+                Avoid simple sequences like 1234 or repeated digits
+              </TextDefault>
             </View>
 
             <View style={styles.actionSection}>
               <TouchableOpacity
-                onPress={handleForgotMpin}
+                onPress={() => handleResetMpin(navigation)}
                 style={styles.forgotButton}
               >
                 <TextDefault style={styles.forgotText}>
@@ -223,14 +283,13 @@ function MpinScreen({ route, navigation }) {
                 </TextDefault>
               </TouchableOpacity>
 
-              {mpin.join("").length === 4 && !isLoading ? (
-                // Gradient button when active
+              {mpin.join("").length === 4 && !isLoading && !isWeakMpin ? (
                 <TouchableOpacity
                   onPress={handleCreateMpin}
                   disabled={isLoading}
                 >
                   <LinearGradient
-                    colors={COLORS.gradientPrimary5}
+                    colors={COLORS.gradientPrimary6}
                     start={{ x: 1, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[styles.createButton, styles.gradientButton]}
@@ -246,11 +305,10 @@ function MpinScreen({ route, navigation }) {
                   </LinearGradient>
                 </TouchableOpacity>
               ) : (
-                // Normal button when inactive
                 <TouchableOpacity
                   style={[
                     styles.createButton,
-                    isLoading ? styles.createButtonLoading : {},
+                    isLoading ? styles.createButtonLoading : styles.disabledButton,
                   ]}
                   onPress={handleCreateMpin}
                   disabled={true}
@@ -272,9 +330,11 @@ function VerifyMpinScreen({ navigation }) {
   const [mpin, setMpin] = useState(["", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [showError, setShowError] = useState(false);
   const inputRefs = useRef([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     animateIn();
@@ -296,6 +356,15 @@ function VerifyMpinScreen({ navigation }) {
     ]).start();
   };
 
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+    ]).start();
+  };
+
   const handleMpinChange = (value, index) => {
     if (value && !/^\d$/.test(value)) return;
 
@@ -307,6 +376,11 @@ function VerifyMpinScreen({ navigation }) {
       inputRefs.current[index + 1]?.focus();
     } else if (!value && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    }
+
+    // Reset error state when user starts typing again
+    if (showError) {
+      setShowError(false);
     }
   };
 
@@ -333,21 +407,28 @@ function VerifyMpinScreen({ navigation }) {
           navigation.replace("Drawer");
         }, 1000);
       } else {
-        setAttempts((prev) => prev + 1);
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        setShowError(true);
+        triggerShake();
+        
         setMpin(["", "", "", ""]);
         inputRefs.current[0]?.focus();
 
-        if (attempts >= 2) {
+        if (newAttempts >= 3) {
           Alert.alert(
             "Too Many Attempts",
             "You have exceeded the maximum number of attempts. Please reset your MPIN.",
             [
               { text: "Cancel", style: "cancel" },
-              { text: "Reset MPIN", onPress: () => navigation.navigate("LoginPage") },
+              { 
+                text: "Reset MPIN", 
+                onPress: () => handleCompleteLogout(navigation)
+              },
             ]
           );
         } else {
-          showToast(`Incorrect MPIN. ${2 - attempts} attempts remaining.`);
+          showToast(`Incorrect MPIN. ${3 - newAttempts} attempts remaining.`);
         }
       }
     } catch (error) {
@@ -360,7 +441,7 @@ function VerifyMpinScreen({ navigation }) {
 
   return (
     <ImageBackground
-      source={require("../../assets/bg6.jpg")}
+      source={require("../../assets/bg7.jpg")}
       style={styles.backgroundImage}
     >
       <KeyboardAvoidingView
@@ -371,7 +452,13 @@ function VerifyMpinScreen({ navigation }) {
         <Animated.View
           style={[
             styles.container,
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+            { 
+              opacity: fadeAnim, 
+              transform: [
+                { translateY: slideAnim },
+                { translateX: shakeAnim }
+              ] 
+            },
           ]}
         >
           {/* Logo Section */}
@@ -383,7 +470,7 @@ function VerifyMpinScreen({ navigation }) {
                   style={styles.logoImage}
                 />
                 <TextDefault style={styles.logoText}>
-                 AKJ Jewellers
+                 AKJ Mini Gold Souk
                 </TextDefault>
               </View>
               <TextDefault style={styles.subtitleText}>
@@ -412,6 +499,7 @@ function VerifyMpinScreen({ navigation }) {
                       style={[
                         styles.mpinInput,
                         digit ? styles.mpinInputFilled : {},
+                        showError ? styles.errorState : {},
                       ]}
                       maxLength={1}
                       keyboardType="numeric"
@@ -432,11 +520,17 @@ function VerifyMpinScreen({ navigation }) {
                   Attempts remaining: {3 - attempts}
                 </TextDefault>
               )}
+
+              {showError && (
+                <TextDefault style={styles.errorText}>
+                  Incorrect MPIN. Please try again.
+                </TextDefault>
+              )}
             </View>
 
             <View style={styles.actionSection}>
               <TouchableOpacity
-                onPress={() => navigation.navigate("LoginPage")}
+                onPress={() => handleResetMpin(navigation)}
                 style={styles.forgotButton}
               >
                 <TextDefault style={styles.forgotText}>
@@ -445,13 +539,12 @@ function VerifyMpinScreen({ navigation }) {
               </TouchableOpacity>
 
               {mpin.join("").length === 4 && !isLoading ? (
-                // Gradient button when active
                 <TouchableOpacity
                   onPress={handleVerifyMpin}
                   disabled={isLoading}
                 >
                   <LinearGradient
-                    colors={COLORS.gradientPrimary5}
+                    colors={COLORS.gradientPrimary6}
                     start={{ x: 1, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={[styles.createButton, styles.gradientButton]}
@@ -467,11 +560,10 @@ function VerifyMpinScreen({ navigation }) {
                   </LinearGradient>
                 </TouchableOpacity>
               ) : (
-                // Inactive button
                 <TouchableOpacity
                   style={[
                     styles.createButton,
-                    isLoading ? styles.createButtonLoading : {},
+                    isLoading ? styles.createButtonLoading : styles.disabledButton,
                   ]}
                   onPress={handleVerifyMpin}
                   disabled={true}
@@ -496,11 +588,9 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
-    //  backgroundColor: colors1.background,
   },
   container: {
     flex: 1,
-
     alignItems: "center",
     marginTop: 60,
   },
@@ -539,13 +629,13 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: COLORS.white,
+    color: COLORS.goldtext,
     letterSpacing: 0.8,
   },
   subtitleText: {
     fontSize: 10,
     fontWeight: "600",
-    color: colors1.textLight,
+    color: COLORS.goldtext1,
     letterSpacing: 1.5,
     opacity: 0.8,
   },
@@ -563,15 +653,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    // fontWeight: "bold",
-    color: COLORS.text,
+    color: COLORS.goldtext,
     marginBottom: 6,
     textAlign: "center",
     ...FONTS.heading
   },
   description: {
     fontSize: 14,
-    color: COLORS.black,
+    color: COLORS.white,
     textAlign: "center",
     opacity: 0.8,
     ...FONTS.font
@@ -585,7 +674,7 @@ const styles = StyleSheet.create({
   mpinLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: colors1.textPrimary,
+   color: COLORS.goldtext1,
     marginBottom: 16,
     alignSelf: "flex-start",
     marginLeft: 6,
@@ -620,7 +709,7 @@ const styles = StyleSheet.create({
   mpinInputFilled: {
     borderColor: COLORS.gradientcolor8,
     backgroundColor: colors1.cardBackground,
-    shadowColor: COLORS.primary,
+    shadowColor: COLORS.goldtext,
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 4,
@@ -633,13 +722,33 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COLORS.gradientcolor8,
+    backgroundColor: COLORS.goldtext1,
   },
   attemptsText: {
+    fontSize: 13,
+    color: COLORS.goldtext1,
+    fontWeight: "500",
+    marginTop: 6,
+  },
+  errorText: {
+    fontSize: 13,
+    color: colors1.error,
+    fontWeight: "500",
+    marginTop: 6,
+  },
+  weakMpinWarning: {
     fontSize: 13,
     color: COLORS.white,
     fontWeight: "500",
     marginTop: 6,
+    textAlign: "center",
+  },
+  securityNote: {
+    fontSize: 13,
+    color: COLORS.goldtext,
+    textAlign: "center",
+    marginTop: 8,
+    fontStyle: "italic",
   },
 
   // Action Section
@@ -666,7 +775,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 2,
-    width: 300,
+    width: 280,
+  },
+  gradientButton: {
+    backgroundColor: 'transparent',
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   createButtonActive: {
     backgroundColor: COLORS.gradientPrimary2,
@@ -678,6 +794,10 @@ const styles = StyleSheet.create({
   createButtonLoading: {
     opacity: 0.7,
   },
+  disabledButton: {
+    backgroundColor: colors1.borderLight,
+    opacity: 0.6,
+  },
   createButtonText: {
     color: colors1.textSecondary,
     fontSize: 17,
@@ -686,6 +806,12 @@ const styles = StyleSheet.create({
   createButtonTextActive: {
     color: colors1.textLight,
   },
+
+  // Error State
+  errorState: {
+    borderColor: COLORS.danger1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
 });
 
-export { MpinScreen, VerifyMpinScreen };
+export { MpinScreen, VerifyMpinScreen, handleCompleteLogout, handleResetMpin };

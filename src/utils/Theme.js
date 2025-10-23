@@ -14,13 +14,13 @@ export const COLORS = {
   // Base - Dark Theme
   background: "rgba(18, 18, 18, 1)",           // Deep black
   card: "rgb(37, 36, 36)",                 // Dark card
-  card1: "rgba(78, 78, 78, 0.38)",             // Semi-transparent dark card
+  card1: "rgba(78, 78, 78, 0.33)",             // Semi-transparent dark card
   surface: "rgba(30, 30, 30, 1)",              // Dark surface
   surfaceVariant: "rgba(38, 38, 38, 1)",       // Variant surface
   transparent: "rgba(0, 0, 0, 0)",
 
   // Core Brand (bright colors for dark theme)
-  primary: "rgba(100, 170, 255, 1)",           // Lighter blue for contrast
+  primary: "rgba(202, 67, 67, 1)",           // Lighter blue for contrast
   primary1: "rgba(255, 255, 255, 1)",           // Lighter blue for contrast
   primaryLight: "rgba(100, 170, 255, 0.15)",
   secondary: "rgba(240, 120, 255, 1)",         // Lighter magenta/pink
@@ -29,19 +29,27 @@ export const COLORS = {
   // Status
   success: "rgba(76, 175, 80, 1)",             // Brighter green
   danger: "rgba(244, 67, 54, 1)",              // Brighter red
+  danger1: "rgba(180, 226, 238, 1)",              // Brighter red
   warning: "rgba(255, 183, 77, 1)",            // Brighter orange
   info: "rgba(66, 165, 245, 1)",               // Brighter info blue
+  // Additional status colors can be added here
+  light: "rgba(255, 255, 255, 0.5)",           // Light status color
+  dark: "rgba(0, 0, 0, 0.5)",                   // Dark status color
+  linktext: "rgba(70, 255, 46, 1)",           // Link text color
+  goldtext: "rgba(255, 215, 0, 1)",           // Gold text color
+  goldtext1: "rgba(180, 157, 28, 1)",           // Gold text color
 
   // Text - Light text on dark background
-  title: "rgb(255, 255, 255)",             // Near white
-  text: "rgba(230, 230, 230, 1)",              // Light gray
+  title: "rgba(255, 255, 255, 1)",             // Near white
+  text: "rgba(255, 255, 255, 1)",              // Light gray
   textLight: "rgba(170, 170, 170, 1)",         // Medium gray
   label: "rgba(150, 150, 150, 1)",             // Dim gray
   label1: "rgba(80, 80, 80, 1)",               // Darker label
   placeholder: "rgba(255, 255, 255, 0.4)",     // Light placeholder
   white: "rgba(255, 255, 255, 1)",
   black: "rgba(0, 0, 0, 1)",
-  black1: "rgb(94, 86, 86)",
+  black1: "rgba(156, 149, 149, 1)",
+  black2: "rgba(53, 50, 50, 1)",
 
   // Borders & Shadows
   borderColor: "rgba(255, 255, 255, 0.12)",    // Light border
@@ -50,15 +58,15 @@ export const COLORS = {
   overlay: "rgba(0, 0, 0, 0.7)",               // Darker overlay
 
   // Inputs
-  input: "rgb(190, 189, 189)",                // Dark input
-  darkInput: "rgba(28, 28, 28, 1)",            // Darker input
+  input: "rgba(28, 28, 28, 1)",                // Dark input
+  darkInput: "rgba(150, 150, 150, 1)",            // Darker input
 
   // Icons
   iconPrimary: "rgba(100, 170, 255, 1)",       // Light blue
   iconSecondary: "rgba(150, 150, 150, 1)",     // Gray
 
   // Gradients (rgba arrays) - Adjusted for dark theme
-  gradientPrimary: ["rgb(255, 110, 100)", "rgb(75, 36, 80)"],
+  gradientPrimary: ["rgba(73, 73, 73, 1)", "rgba(56, 56, 56, 1)"],
   gradientSecondary: ["rgba(100, 170, 255, 0.15)", "rgba(240, 120, 255, 1)"],
   gradientText: ["rgba(100, 170, 255, 1)", "rgba(240, 120, 255, 1)"],
   gradientBackground: "linear-gradient(135deg, rgba(20, 20, 20, 1), rgba(30, 30, 30, 1))",
@@ -67,6 +75,7 @@ export const COLORS = {
   gradientPrimary3: ["rgba(28, 28, 28, 1)", "rgba(38, 38, 38, 1)"],
   gradientPrimary4: ["rgba(45, 45, 45, 1)", "rgba(55, 55, 55, 1)"],
   gradientPrimary5: ["rgb(255, 110, 100)", "rgb(75, 36, 80)"],
+  gradientPrimary6: ["rgba(255, 215, 0, 1)", "rgba(109, 97, 27, 1)"],
 
   // Product card
   gradientcolor1: "rgba(100, 170, 255, 1)",
@@ -79,8 +88,14 @@ export const COLORS = {
   gradientcolor5: "rgba(100, 170, 255, 1)",
   gradientcolor6: "rgba(240, 120, 255, 1)",
 
-  gradientcolor7: "rgb(255, 110, 100)",
-  gradientcolor8: "rgb(75, 36, 80)",
+  gradientcolor7: "rgba(255, 215, 0, 1)",
+  gradientcolor8: "rgba(109, 97, 27, 1)",
+
+  gradientcolor9: "rgba(73, 73, 73, 1)",
+  gradientcolor10: "rgba(56, 56, 56, 1)",
+
+  gradientcolor11: "rgba(207, 194, 2, 1)",
+  gradientcolor12: "rgba(71, 70, 6, 1)",
 };
 
 export const DIGIGOLD_COLORS = {
@@ -188,7 +203,7 @@ export const FONTS = {
   },
   h6: {
     fontSize: SIZES.h6,
-    color: COLORS.title,
+
     fontFamily: "DMSerif",
     lineHeight: moderateScale(24),
   },

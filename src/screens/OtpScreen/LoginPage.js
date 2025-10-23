@@ -135,7 +135,7 @@ function LoginPage({ route }) {
           userId: id,
           userEmail: email,
           username: username,
-          // Note: No userPhoneNumber stored for Google login
+         
         });
 
         showToast(message || "Logged in successfully with Google");
@@ -228,7 +228,7 @@ const handleLogin = async () => {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <ImageBackground
-        source={require("../../assets/bg6.jpg")}
+        source={require("../../assets/bg7.jpg")}
         style={styles.backgroundImage}
       >
         <KeyboardAvoidingView
@@ -259,7 +259,7 @@ const handleLogin = async () => {
                   value={contactOrEmailOrUsername}
                   onChangeText={setContactOrEmailOrUsername}
                   placeholder="Enter email or phone"
-                  placeholderTextColor={COLORS.black}
+                  placeholderTextColor={COLORS.black1}
                   autoCapitalize="none"
                 />
 
@@ -269,7 +269,7 @@ const handleLogin = async () => {
                   value={password}
                   onChangeText={setPassword}
                   placeholder="Enter password"
-                  placeholderTextColor={COLORS.black}
+                  placeholderTextColor={COLORS.black1}
                   secureTextEntry
                 />
 
@@ -299,14 +299,14 @@ const handleLogin = async () => {
                 </TouchableOpacity>
 
                 {/* ✅ Divider */}
-                <View style={styles.dividerContainer}>
+                {/* <View style={styles.dividerContainer}>
                   <View style={styles.divider} />
                   <Text style={styles.dividerText}>or continue with</Text>
                   <View style={styles.divider} />
-                </View>
+                </View> */}
 
                 {/* ✅ Google Sign-In Button */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={[
                     styles.googleButton,
                     googleLoading && styles.disabledButton,
@@ -333,7 +333,7 @@ const handleLogin = async () => {
                       </View>
                     </>
                   )}
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 {/* ✅ Register link */}
                 <TouchableOpacity
